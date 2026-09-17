@@ -9,24 +9,27 @@ const languageHintText = document.querySelector('#language-hint-text');
 const languageSource = document.querySelector('#language-source');
 const headerLanguage = document.querySelector('#header-language');
 
-// The only Indigenous-language sentences displayed here have a cited source.
-// Welfare and navigation copy deliberately remain in Chinese until reviewed
-// with speakers of the relevant variety at the field site.
+// Only source-checked, dialect-specific phrases are shown as Indigenous-language
+// translations. Welfare and application copy stays in Chinese until local review.
 const languageModes = {
   zh: { header: '互動示範 · 非官方服務' },
   ami: {
     header: '海岸阿美語 · 示範',
     greeting: 'Nga’ay ho!',
+    helpQuestion: 'Padangen ako kiso?',
+    helpChinese: '需要我幫忙嗎？',
     lang: 'ami',
-    hint: '海岸阿美語示範。其餘資訊暫用中文輔助，待族語老師校對。',
-    source: 'https://web.klokah.tw/lifesentences/'
+    hint: '海岸阿美語：問候與求助句已核對教材；福利與申請內容暫用中文，待族語老師校對。',
+    source: 'https://web.klokah.tw/extension/con_practice/index.php?d=3&l=21&view=dialogue'
   },
   tay: {
     header: '賽考利克泰雅語 · 示範',
     greeting: 'lokah su!',
+    helpQuestion: 'pragun misu ga?',
+    helpChinese: '請問需要幫忙嗎？',
     lang: 'tay',
-    hint: '賽考利克泰雅語示範。其餘資訊暫用中文輔助，待族語老師校對。',
-    source: 'https://web.klokah.tw/lifesentences/'
+    hint: '賽考利克泰雅語：問候與求助句已核對教材；福利與申請內容暫用中文，待族語老師校對。',
+    source: 'https://web.klokah.tw/extension/con_practice/index.php?d=6&l=7&view=dialogue'
   }
 };
 let currentLanguage = 'zh';
@@ -136,6 +139,15 @@ function applyLanguage(mode) {
     greeting.textContent = config.greeting;
     greeting.lang = config.lang;
   }
+  const helpQuestion = document.querySelector('#welcome-help-question');
+  helpQuestion.hidden = !config.helpQuestion;
+  if (config.helpQuestion) {
+    helpQuestion.textContent = config.helpQuestion;
+    helpQuestion.lang = config.lang;
+  }
+  document.querySelector('#welcome-body').textContent = config.helpChinese
+    ? `${config.helpChinese}\n我是福利行動導航示範版。請點下方選單，了解下一步。`
+    : '您好，我是福利行動導航示範版。\n\n想先了解哪一件事？點選下方選單即可開始。';
   input.value = '';
   setQuickActions(mainActions);
   scrollToLatest();
@@ -170,7 +182,8 @@ function choose(action) {
     return;
   }
   if (action === 'human') {
-    addCard({ tag: '需要有人幫忙', title: '請向現場或官方窗口詢問', description: '若看不懂條件、文件不齊，或不知道下一步，可先請集會所工作人員協助，再由福利承辦單位確認資格。正式版只會列出已取得同意、核對過的聯絡方式。', actions: [{ label: '回主選單', action: 'menu' }] });
+    const help = languageModes[currentLanguage].helpQuestion;
+    addCard({ tag: '需要有人幫忙', title: help ? `${help}｜${languageModes[currentLanguage].helpChinese}` : '請向現場或官方窗口詢問', description: '若看不懂條件、文件不齊，或不知道下一步，可先請集會所工作人員協助，再由福利承辦單位確認資格。正式版只會列出已取得同意、核對過的聯絡方式。', actions: [{ label: '回主選單', action: 'menu' }] });
     setQuickActions([{ label: '回主選單', action: 'menu' }]);
     return;
   }
