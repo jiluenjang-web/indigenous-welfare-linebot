@@ -3,6 +3,33 @@ const quickActions = document.querySelector('#quick-actions');
 const composer = document.querySelector('#composer');
 const input = document.querySelector('#message-input');
 const firstMessage = messages.innerHTML;
+const languageSelect = document.querySelector('#language-select');
+const languageHint = document.querySelector('#language-hint');
+const languageHintText = document.querySelector('#language-hint-text');
+const languageSource = document.querySelector('#language-source');
+const headerLanguage = document.querySelector('#header-language');
+
+// The only Indigenous-language sentences displayed here have a cited source.
+// Welfare and navigation copy deliberately remain in Chinese until reviewed
+// with speakers of the relevant variety at the field site.
+const languageModes = {
+  zh: { header: '互動示範 · 非官方服務' },
+  ami: {
+    header: '海岸阿美語 · 示範',
+    greeting: 'Nga’ay ho!',
+    lang: 'ami',
+    hint: '海岸阿美語示範。其餘資訊暫用中文輔助，待族語老師校對。',
+    source: 'https://web.klokah.tw/lifesentences/'
+  },
+  tay: {
+    header: '賽考利克泰雅語 · 示範',
+    greeting: 'lokah su!',
+    lang: 'tay',
+    hint: '賽考利克泰雅語示範。其餘資訊暫用中文輔助，待族語老師校對。',
+    source: 'https://web.klokah.tw/lifesentences/'
+  }
+};
+let currentLanguage = 'zh';
 
 const mainActions = [
   { label: '福利資訊', action: 'benefits' },
@@ -92,6 +119,28 @@ function setQuickActions(actions) {
   });
 }
 
+function applyLanguage(mode) {
+  const config = languageModes[mode] || languageModes.zh;
+  currentLanguage = languageModes[mode] ? mode : 'zh';
+  languageSelect.value = currentLanguage;
+  headerLanguage.textContent = config.header;
+  languageHint.hidden = currentLanguage === 'zh';
+  if (currentLanguage !== 'zh') {
+    languageHintText.textContent = config.hint;
+    languageSource.href = config.source;
+  }
+  messages.innerHTML = firstMessage;
+  const greeting = document.querySelector('#welcome-greeting');
+  greeting.hidden = !config.greeting;
+  if (config.greeting) {
+    greeting.textContent = config.greeting;
+    greeting.lang = config.lang;
+  }
+  input.value = '';
+  setQuickActions(mainActions);
+  scrollToLatest();
+}
+
 function choose(action) {
   const names = {
     benefits: '福利資訊', prepare: '申請準備', human: '真人協助',
@@ -158,14 +207,10 @@ composer.addEventListener('submit', event => {
   replyToText(text);
 });
 for (const id of ['reset-desktop', 'reset-mobile']) {
-  document.querySelector(`#${id}`).addEventListener('click', () => {
-    messages.innerHTML = firstMessage;
-    input.value = '';
-    setQuickActions(mainActions);
-    scrollToLatest();
-  });
+  document.querySelector(`#${id}`).addEventListener('click', () => applyLanguage(currentLanguage));
 }
-setQuickActions(mainActions);
+languageSelect.addEventListener('change', () => applyLanguage(languageSelect.value));
+applyLanguage('zh');
 
 if (document.modelContext?.registerTool) {
   try {

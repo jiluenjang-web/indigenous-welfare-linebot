@@ -28,15 +28,25 @@
       <header class="chat-header">
         <div class="header-back" aria-hidden="true">‹</div>
         <div class="bot-mark" aria-hidden="true">福</div>
-        <div class="header-copy"><strong>福利行動導航</strong><small>互動示範 · 非官方服務</small></div>
+        <div class="header-copy"><strong>福利導航</strong><small id="header-language">互動示範 · 非官方服務</small></div>
+        <label class="visually-hidden" for="language-select">切換介面語言</label>
+        <select class="language-select" id="language-select" aria-label="切換介面語言">
+          <option value="zh">中文</option>
+          <option value="ami">阿美語</option>
+          <option value="tay">泰雅語</option>
+        </select>
         <button class="header-menu" id="reset-mobile" type="button" aria-label="重新開始對話">⋯</button>
       </header>
       <div class="demo-ribbon">介面模擬｜請勿輸入個人資料</div>
+      <div class="language-hint" id="language-hint" hidden>
+        <span id="language-hint-text"></span>
+        <a id="language-source" href="#" target="_blank" rel="noopener noreferrer">問候語來源</a>
+      </div>
       <div class="messages" id="messages" role="log" aria-live="polite" aria-relevant="additions">
         <div class="date-pill">今天</div>
         <div class="message-row bot">
           <div class="bubble-avatar" aria-hidden="true">福</div>
-          <div class="bubble">您好，我是福利行動導航示範版。<br><br>想先了解哪一件事？點選下方選單即可開始。</div>
+          <div class="bubble"><strong class="native-greeting" id="welcome-greeting" hidden></strong><span id="welcome-body">您好，我是福利行動導航示範版。<br><br>想先了解哪一件事？點選下方選單即可開始。</span></div>
         </div>
       </div>
       <div class="chat-bottom">
