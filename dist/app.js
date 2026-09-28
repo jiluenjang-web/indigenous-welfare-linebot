@@ -9,33 +9,62 @@ const languageHintText = document.querySelector('#language-hint-text');
 const languageSource = document.querySelector('#language-source');
 const headerLanguage = document.querySelector('#header-language');
 
-// Only source-checked, dialect-specific phrases are shown as Indigenous-language
-// translations. Welfare and application copy stays in Chinese until local review.
+// 族語只顯示已核對教材的短句，福利內容維持中文，避免申請誤解。
 const languageModes = {
-  zh: { header: '互動示範 · 非官方服務' },
+  zh: { header: '互動原型 · 非官方審核' },
   ami: {
-    header: '海岸阿美語 · 示範',
-    greeting: 'Nga’ay ho!',
-    helpQuestion: 'Padangen ako kiso?',
-    helpChinese: '需要我幫忙嗎？',
-    lang: 'ami',
-    hint: '海岸阿美語：問候與求助句已核對教材；福利與申請內容暫用中文，待族語老師校對。',
+    header: '海岸阿美語 · 示範', greeting: 'Nga’ay ho!',
+    helpQuestion: 'Padangen ako kiso?', helpChinese: '需要我幫忙嗎？', lang: 'ami',
+    hint: '海岸阿美語：問候與求助句已核對教材；福利內容暫用中文，待族語老師與在地使用者校對。',
     source: 'https://web.klokah.tw/extension/con_practice/index.php?d=3&l=21&view=dialogue'
   },
   tay: {
-    header: '賽考利克泰雅語 · 示範',
-    greeting: 'lokah su!',
-    helpQuestion: 'pragun misu ga?',
-    helpChinese: '請問需要幫忙嗎？',
-    lang: 'tay',
-    hint: '賽考利克泰雅語：問候與求助句已核對教材；福利與申請內容暫用中文，待族語老師校對。',
+    header: '賽考利克泰雅語 · 示範', greeting: 'lokah su!',
+    helpQuestion: 'pragun misu ga?', helpChinese: '請問需要幫忙嗎？', lang: 'tay',
+    hint: '賽考利克泰雅語：問候與求助句已核對教材；福利內容暫用中文，待族語老師與在地使用者校對。',
     source: 'https://web.klokah.tw/extension/con_practice/index.php?d=6&l=7&view=dialogue'
   }
 };
+
+const welfareData = {
+  elderCard: {
+    title: '桃園市原民敬老卡', category: '交通外出',
+    summary: '協助符合條件的原住民長者申請市民卡與交通點數補助。',
+    eligibility: '設籍桃園市，且年滿 55 歲的原住民。最終資格由受理機關審核。',
+    documents: ['國民身分證正本', '最新戶口名簿或戶籍謄本影本（註記原住民身分）', '6 個月內 2 吋照片，或依現場規定拍照', '委託代辦時：委託書及代理人身分證明'],
+    steps: ['先完成基本資格快篩', '將文件清單逐項備齊', '到可受理的桃園市區公所辦理', '由承辦人員審核與說明後續進度'],
+    sourceName: '桃園市市民卡官方說明',
+    sourceUrl: 'https://typass.tycg.gov.tw/citizen-card-intro/view?id=06',
+    verified: '2026-09-28', status: '已對照官方頁面'
+  },
+  living: {
+    title: '生活津貼與經濟協助', category: '經濟生活',
+    summary: '用生活情境找到可能相關的老年給付、生活津貼與急難救助。',
+    eligibility: '各項福利的年齡、居住、所得與資產條件不同，需依戶籍地及福利項目逐一確認。',
+    documents: ['身分證明與戶籍資料', '金融帳戶或郵局存簿', '主管機關要求的所得、財產或其他證明'],
+    steps: ['選擇目前生活困難', '比對可能的福利項目', '向區公所或主管機關確認最新資格', '備齊文件後送件'],
+    sourceName: '桃園市福利補助開放資料',
+    sourceUrl: 'https://data.gov.tw/dataset/26032',
+    verified: '2026-09-28', status: '流程示範，項目資格需即時查核'
+  },
+  medical: {
+    title: '就醫、健保與假牙協助', category: '就醫照顧',
+    summary: '整理健保費、醫療費與假牙補助的查詢及申請方向。',
+    eligibility: '補助對象、醫療需求、診斷與所得條件依各方案而異，應由承辦單位確認。',
+    documents: ['身分證明與健保卡', '原住民身分或戶籍證明', '診斷書、醫療費用單據或治療計畫（視項目而定）'],
+    steps: ['選擇需要的醫療協助', '查看對應方案與官方來源', '由醫療機構或承辦單位確認文件', '按指定窗口申請'],
+    sourceName: '桃園市福利補助開放資料',
+    sourceUrl: 'https://data.gov.tw/dataset/26032',
+    verified: '2026-09-28', status: '流程示範，項目資格需即時查核'
+  }
+};
+
 let currentLanguage = 'zh';
+let selectedBenefit = null;
+let helpReason = '';
 
 const mainActions = [
-  { label: '福利資訊', action: 'benefits' },
+  { label: '找福利', action: 'benefits' },
   { label: '申請準備', action: 'prepare' },
   { label: '真人協助', action: 'human' }
 ];
@@ -60,7 +89,7 @@ function addBubble(text, speaker = 'bot') {
   scrollToLatest();
 }
 
-function addCard({ tag, title, description, bullets = [], actions = [] }) {
+function addCard({ tag, title, description, bullets = [], meta = [], actions = [] }) {
   const row = document.createElement('div');
   row.className = 'message-row bot';
   const avatar = document.createElement('div');
@@ -94,18 +123,78 @@ function addCard({ tag, title, description, bullets = [], actions = [] }) {
     });
     bubble.append(list);
   }
+  if (meta.length) {
+    const info = document.createElement('div');
+    info.className = 'card-meta';
+    meta.forEach(item => {
+      const span = document.createElement('span');
+      span.textContent = item;
+      info.append(span);
+    });
+    bubble.append(info);
+  }
   if (actions.length) {
     const controls = document.createElement('div');
     controls.className = 'card-actions';
-    actions.forEach(({ label, action }) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.dataset.action = action;
-      button.textContent = label;
-      controls.append(button);
+    actions.forEach(({ label, action, href, primary = false }) => {
+      const control = href ? document.createElement('a') : document.createElement('button');
+      if (href) {
+        control.href = href;
+        control.target = '_blank';
+        control.rel = 'noopener noreferrer';
+      } else {
+        control.type = 'button';
+        control.dataset.action = action;
+      }
+      if (primary) control.classList.add('primary');
+      control.textContent = label;
+      controls.append(control);
     });
     bubble.append(controls);
   }
+  row.append(avatar, bubble);
+  messages.append(row);
+  scrollToLatest();
+}
+
+function addChecklist(record) {
+  const row = document.createElement('div');
+  row.className = 'message-row bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'bubble-avatar';
+  avatar.textContent = '福';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble card-message';
+  const title = document.createElement('strong');
+  title.className = 'card-title';
+  title.textContent = '第 2 步｜應備文件清單';
+  const note = document.createElement('p');
+  note.textContent = '有帶的文件可直接打勾，不需上傳或輸入個人資料。';
+  const progress = document.createElement('div');
+  progress.className = 'check-progress';
+  progress.textContent = `已準備 0 / ${record.documents.length}`;
+  const list = document.createElement('div');
+  list.className = 'check-list';
+  record.documents.forEach((item, index) => {
+    const label = document.createElement('label');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = String(index);
+    label.append(checkbox, document.createTextNode(item));
+    list.append(label);
+  });
+  list.addEventListener('change', () => {
+    progress.textContent = `已準備 ${list.querySelectorAll('input:checked').length} / ${record.documents.length}`;
+  });
+  const controls = document.createElement('div');
+  controls.className = 'card-actions';
+  const next = document.createElement('button');
+  next.type = 'button';
+  next.className = 'primary';
+  next.dataset.action = 'apply-location';
+  next.textContent = '查看辦理方式';
+  controls.append(next);
+  bubble.append(title, note, progress, list, controls);
   row.append(avatar, bubble);
   messages.append(row);
   scrollToLatest();
@@ -135,75 +224,184 @@ function applyLanguage(mode) {
   messages.innerHTML = firstMessage;
   const greeting = document.querySelector('#welcome-greeting');
   greeting.hidden = !config.greeting;
-  if (config.greeting) {
-    greeting.textContent = config.greeting;
-    greeting.lang = config.lang;
-  }
+  if (config.greeting) { greeting.textContent = config.greeting; greeting.lang = config.lang; }
   const helpQuestion = document.querySelector('#welcome-help-question');
   helpQuestion.hidden = !config.helpQuestion;
-  if (config.helpQuestion) {
-    helpQuestion.textContent = config.helpQuestion;
-    helpQuestion.lang = config.lang;
-  }
+  if (config.helpQuestion) { helpQuestion.textContent = config.helpQuestion; helpQuestion.lang = config.lang; }
   document.querySelector('#welcome-body').textContent = config.helpChinese
-    ? `${config.helpChinese}\n我是福利行動導航示範版。請點下方選單，了解下一步。`
-    : '您好，我是福利行動導航示範版。\n\n想先了解哪一件事？點選下方選單即可開始。';
+    ? `${config.helpChinese}\n我可以幫您查福利、整理申請文件，也能找到真人協助。`
+    : '您好，我是福利行動導航。\n\n可以幫您查福利、整理申請文件，也能找到真人協助。';
+  selectedBenefit = null;
+  helpReason = '';
   input.value = '';
   setQuickActions(mainActions);
   scrollToLatest();
 }
 
+function showBenefitChoices(category) {
+  const ids = category === 'living' ? ['living'] : category === 'care' ? ['medical'] : ['elderCard'];
+  ids.forEach(id => {
+    const item = welfareData[id];
+    addCard({
+      tag: item.category, title: item.title, description: item.summary,
+      meta: [`資料狀態：${item.status}`, `查核日：${item.verified}`],
+      actions: [{ label: '查看資格與步驟', action: `detail:${id}`, primary: true }]
+    });
+  });
+  setQuickActions([{ label: '其他類別', action: 'benefits' }, { label: '申請準備', action: 'prepare' }]);
+}
+
+function showBenefitDetail(id) {
+  const item = welfareData[id];
+  selectedBenefit = id;
+  addCard({
+    tag: item.category, title: item.title, description: `可能適用對象：${item.eligibility}`,
+    bullets: item.steps,
+    meta: [`官方來源：${item.sourceName}`, `最後查核：${item.verified}`],
+    actions: [
+      { label: '開始申請準備', action: `prepare:${id}`, primary: true },
+      { label: '查看官方來源 ↗', href: item.sourceUrl }
+    ]
+  });
+  addBubble('重要提醒：系統只能協助整理資訊，不代表已通過申請；實際資格以承辦機關最新審核為準。');
+  setQuickActions([{ label: '申請準備', action: `prepare:${id}` }, { label: '找真人', action: 'human' }]);
+}
+
+function startPreparation(id) {
+  selectedBenefit = id || selectedBenefit || 'elderCard';
+  const item = welfareData[selectedBenefit];
+  addCard({
+    tag: '第 1 步／共 3 步', title: `${item.title}｜資格自評`,
+    description: selectedBenefit === 'elderCard' ? '請先回答：申請人是否設籍桃園市？' : '由於每項津貼條件不同，建議先整理文件，再由承辦窗口確認資格。',
+    actions: selectedBenefit === 'elderCard'
+      ? [{ label: '是', action: 'qualify:resident', primary: true }, { label: '否／不確定', action: 'qualify:resident-no' }]
+      : [{ label: '整理文件', action: 'show-checklist', primary: true }, { label: '請真人協助', action: 'human' }]
+  });
+  setQuickActions([{ label: '重新選擇福利', action: 'prepare' }, { label: '找真人', action: 'human' }]);
+}
+
+function showHumanResult(region) {
+  const reasonText = helpReason || '確認福利與申請方式';
+  addCard({
+    tag: '真人協助 · 第 3 步', title: `${region}｜建議聯絡方式`,
+    description: `您要詢問：${reasonText}。可先聯絡戶籍地區公所社會課，或透過桃園 1999 市民諮詢服務轉接主管單位。`,
+    bullets: ['先說明「想申請的福利」或「目前遇到的困難」', '詢問最新資格、文件與受理地點', '先電話確認再前往，減少白跑一趟'],
+    actions: [
+      { label: '撥打桃園 1999', href: 'tel:1999', primary: true },
+      { label: '查官方福利資料 ↗', href: 'https://data.gov.tw/dataset/26032' },
+      { label: '回主選單', action: 'menu' }
+    ]
+  });
+  addBubble('聯絡前可先把問題與手邊文件寫下來。不需在本系統輸入身分證號、病歷或存簿資料。');
+  setQuickActions(mainActions);
+}
+
 function choose(action) {
   const names = {
-    benefits: '福利資訊', prepare: '申請準備', human: '真人協助',
-    living: '經濟生活', care: '就醫照顧', mobility: '交通外出', menu: '回主選單'
+    benefits: '找福利', prepare: '申請準備', human: '真人協助', living: '經濟生活',
+    care: '就醫照顧', mobility: '交通外出', menu: '回主選單', 'show-checklist': '整理文件',
+    'apply-location': '查看辦理方式', 'qualify:resident': '是，設籍桃園', 'qualify:resident-no': '否／不確定',
+    'qualify:age': '已年滿 55 歲', 'qualify:age-no': '未滿 55 歲／不確定',
+    'qualify:indigenous': '戶籍記載為原住民', 'qualify:indigenous-no': '否／不確定'
   };
-  addBubble(names[action] || '查看資訊', 'user');
+  const dataId = action.includes(':') ? action.split(':')[1] : '';
+  const label = names[action] || ((action.startsWith('detail:') || action.startsWith('prepare:')) ? welfareData[dataId]?.title : dataId || '查看資訊');
+  addBubble(label || '查看資訊', 'user');
+
+  if (action === 'menu') {
+    addBubble('想先處理哪一件事？');
+    setQuickActions(mainActions);
+    return;
+  }
   if (action === 'benefits') {
-    addCard({ tag: '第一步', title: '想查哪一類福利？', description: '先依需求分類。正式版會顯示核對過的官方資訊與在地辦理方式。', actions: [
-      { label: '經濟生活', action: 'living' }, { label: '就醫照顧', action: 'care' }, { label: '交通外出', action: 'mobility' }
-    ] });
+    addCard({
+      tag: '找得到 · 第 1 步', title: '您現在最想解決哪類問題？',
+      description: '不用記住政策名稱，直接依生活需要選擇。',
+      actions: [{ label: '生活費不夠', action: 'living' }, { label: '需要就醫照顧', action: 'care' }, { label: '外出交通不便', action: 'mobility' }]
+    });
     setQuickActions([{ label: '經濟生活', action: 'living' }, { label: '就醫照顧', action: 'care' }, { label: '交通外出', action: 'mobility' }]);
     return;
   }
-  if (['living', 'care', 'mobility'].includes(action)) {
-    addCard({ tag: '內容待查證', title: `${names[action]}｜資訊呈現範例`, description: '參訪與資料核對後，這裡才會顯示實際福利項目。每個項目預計包含：', bullets: [
-      '適用對象與申請條件', '應備文件及辦理步驟', '官方來源、更新日期與承辦窗口'
-    ], actions: [{ label: '其他福利類別', action: 'benefits' }, { label: '找真人協助', action: 'human' }] });
-    setQuickActions([{ label: '其他福利類別', action: 'benefits' }, { label: '找真人協助', action: 'human' }]);
-    return;
-  }
+  if (['living', 'care', 'mobility'].includes(action)) { showBenefitChoices(action); return; }
+  if (action.startsWith('detail:')) { showBenefitDetail(dataId); return; }
+
   if (action === 'prepare') {
-    addCard({ tag: '申請前', title: '先把問題整理好', description: '正式申請文件會依福利項目不同，由承辦單位確認。現在可以先做這三件事：', bullets: [
-      '記下想詢問的福利或目前遇到的困難', '向承辦窗口確認資格與最新文件清單', '備妥資料後再前往辦理，避免白跑一趟'
-    ], actions: [{ label: '查看福利類別', action: 'benefits' }, { label: '找真人協助', action: 'human' }] });
-    addBubble('提醒：請勿在這個示範對話中輸入身分證字號、地址或健康資料。');
-    setQuickActions([{ label: '查看福利類別', action: 'benefits' }, { label: '找真人協助', action: 'human' }]);
+    addCard({
+      tag: '做得到', title: '要準備哪一項申請？',
+      description: '選擇項目後，系統會帶您完成資格自評、文件清單與辦理方式。',
+      actions: Object.entries(welfareData).map(([id, item]) => ({ label: item.title, action: `prepare:${id}` }))
+    });
+    setQuickActions([{ label: '原民敬老卡', action: 'prepare:elderCard' }, { label: '找真人', action: 'human' }]);
     return;
   }
+  if (action.startsWith('prepare:')) { startPreparation(dataId); return; }
+  if (action === 'qualify:resident') {
+    addCard({ tag: '資格自評 · 2/3', title: '申請人是否已年滿 55 歲？', description: '這是原民敬老卡的基本條件之一。', actions: [{ label: '已年滿 55 歲', action: 'qualify:age', primary: true }, { label: '未滿／不確定', action: 'qualify:age-no' }] });
+    return;
+  }
+  if (action === 'qualify:age') {
+    addCard({ tag: '資格自評 · 3/3', title: '戶籍資料是否記載原住民身分？', description: '申請時需用戶口名簿或戶籍謄本證明。', actions: [{ label: '是', action: 'qualify:indigenous', primary: true }, { label: '否／不確定', action: 'qualify:indigenous-no' }] });
+    return;
+  }
+  if (['qualify:resident-no', 'qualify:age-no', 'qualify:indigenous-no'].includes(action)) {
+    addCard({ tag: '自評結果', title: '目前無法完成基本條件比對', description: '您可以請區公所或集會所工作人員確認，也可先查看其他福利。', actions: [{ label: '找真人協助', action: 'human', primary: true }, { label: '查其他福利', action: 'benefits' }] });
+    return;
+  }
+  if (action === 'qualify:indigenous') {
+    addCard({ tag: '自評結果', title: '可能符合基本申請條件', description: '這不是正式核定。下一步請整理文件，再由受理機關審核。', actions: [{ label: '開啟文件清單', action: 'show-checklist', primary: true }] });
+    return;
+  }
+  if (action === 'show-checklist') {
+    addChecklist(welfareData[selectedBenefit || 'elderCard']);
+    setQuickActions([{ label: '找真人', action: 'human' }, { label: '回主選單', action: 'menu' }]);
+    return;
+  }
+  if (action === 'apply-location') {
+    const item = welfareData[selectedBenefit || 'elderCard'];
+    addCard({
+      tag: '第 3 步／共 3 步', title: '確認後前往辦理',
+      description: selectedBenefit === 'elderCard' ? '建議先聯絡桃園市區公所，確認最新文件、受理時間與是否可跨區辦理。' : '請先向官方承辦單位確認最新資格與送件方式。',
+      bullets: item.steps,
+      meta: [`來源：${item.sourceName}`, `查核日：${item.verified}`],
+      actions: [{ label: '開啟官方說明 ↗', href: item.sourceUrl, primary: true }, { label: '需要真人協助', action: 'human' }]
+    });
+    setQuickActions(mainActions);
+    return;
+  }
+
   if (action === 'human') {
-    const help = languageModes[currentLanguage].helpQuestion;
-    addCard({ tag: '需要有人幫忙', title: help ? `${help}｜${languageModes[currentLanguage].helpChinese}` : '請向現場或官方窗口詢問', description: '若看不懂條件、文件不齊，或不知道下一步，可先請集會所工作人員協助，再由福利承辦單位確認資格。正式版只會列出已取得同意、核對過的聯絡方式。', actions: [{ label: '回主選單', action: 'menu' }] });
-    setQuickActions([{ label: '回主選單', action: 'menu' }]);
+    addCard({
+      tag: '真人兜底 · 第 1 步', title: '您遇到哪一種困難？',
+      description: '系統先整理問題，再將您導向適合的真人服務窗口。',
+      actions: [{ label: '看不懂資格', action: 'help:看不懂資格' }, { label: '不知道文件帶對沒', action: 'help:文件確認' }, { label: '不知道去哪裡辦', action: 'help:找承辦窗口' }]
+    });
+    setQuickActions([{ label: '看不懂資格', action: 'help:看不懂資格' }, { label: '文件確認', action: 'help:文件確認' }]);
     return;
   }
-  addBubble('請選擇下方其中一項。正式版會依實地訪談結果調整選項。');
+  if (action.startsWith('help:')) {
+    helpReason = dataId;
+    addCard({ tag: '真人協助 · 第 2 步', title: '您住在桃園哪個區域？', description: '這個選擇只用來導向服務區域，不會儲存詳細地址。', actions: [{ label: '桃園／八德／龜山', action: 'region:北桃園服務區' }, { label: '中壢／平鎮／楊梅', action: 'region:南桃園服務區' }, { label: '復興區', action: 'region:復興區' }, { label: '其他／不確定', action: 'region:戶籍地區公所' }] });
+    return;
+  }
+  if (action.startsWith('region:')) { showHumanResult(dataId); return; }
+
+  addBubble('請選擇下方其中一項。');
   setQuickActions(mainActions);
 }
 
 function replyToText(text) {
   addBubble(text, 'user');
-  if (/福利|補助|津貼/.test(text)) {
-    addBubble('我可以先協助分類，但目前尚未匯入經查證的福利項目。請選擇一個類別。');
+  if (/福利|補助|津貼|交通|就醫/.test(text)) {
+    addBubble('我先用生活需求幫您分類，不用記政策名稱。');
     setQuickActions([{ label: '經濟生活', action: 'living' }, { label: '就醫照顧', action: 'care' }, { label: '交通外出', action: 'mobility' }]);
   } else if (/文件|準備|申請/.test(text)) {
-    addBubble('各項福利的文件可能不同。正式版會顯示官方清單；現在可先向承辦窗口確認。');
-    setQuickActions([{ label: '申請準備', action: 'prepare' }, { label: '真人協助', action: 'human' }]);
-  } else if (/人|電話|窗口|協助/.test(text)) {
-    addBubble('目前沒有經確認的聯絡方式。請向集會所工作人員或福利承辦單位詢問。');
-    setQuickActions([{ label: '真人協助', action: 'human' }]);
+    addBubble('可以。我會帶您完成資格自評、文件清單與辦理方式。');
+    setQuickActions([{ label: '開始申請準備', action: 'prepare' }, { label: '真人協助', action: 'human' }]);
+  } else if (/人|電話|窗口|協助|不懂/.test(text)) {
+    addBubble('我會先整理您的問題，再帶您找適合的服務窗口。');
+    setQuickActions([{ label: '開始真人協助', action: 'human' }]);
   } else {
-    addBubble('這是按鈕式互動原型，還不能自由回答問題。請點下方選單試用。');
+    addBubble('目前先專注三項功能，請點選：找福利、申請準備或真人協助。');
     setQuickActions(mainActions);
   }
 }
@@ -224,27 +422,3 @@ for (const id of ['reset-desktop', 'reset-mobile']) {
 }
 languageSelect.addEventListener('change', () => applyLanguage(languageSelect.value));
 applyLanguage('zh');
-
-if (document.modelContext?.registerTool) {
-  try {
-    void Promise.resolve(document.modelContext.registerTool({
-      name: 'select_welfare_demo_option',
-      title: '選擇福利導航示範選項',
-      description: '在手機聊天模擬畫面中選擇一個現有選單項目，並顯示對應回覆。',
-      inputSchema: {
-        type: 'object',
-        properties: { option: { type: 'string', enum: ['benefits', 'prepare', 'human', 'living', 'care', 'mobility', 'menu'] } },
-        required: ['option'],
-        additionalProperties: false
-      },
-      annotations: { readOnlyHint: false, untrustedContentHint: false },
-      execute({ option }) {
-        if (!['benefits', 'prepare', 'human', 'living', 'care', 'mobility', 'menu'].includes(option)) {
-          throw new Error('不支援的選項');
-        }
-        choose(option);
-        return { selected: option, visibleMessages: messages.querySelectorAll('.message-row').length };
-      }
-    })).catch(() => {});
-  } catch { /* Unsupported browser implementations should not affect the demo. */ }
-}
