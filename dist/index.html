@@ -7,9 +7,9 @@
   <meta name="description" content="原住民族長者福利行動導航 LINE Bot 互動介面示範。">
   <title>福利行動導航｜LINE Bot 介面模擬</title>
   <link rel="icon" type="image/jpeg" href="./assets/資訊平權ICON.jpg">
-  <link rel="stylesheet" href="./styles.css?v=20260929">
-  <script src="./translations.js?v=20260929" defer></script>
-  <script src="./app.js?v=20260929" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=20260929b">
+  <script src="./translations.js?v=20260929b" defer></script>
+  <script src="./app.js?v=20260929b" defer></script>
 </head>
 <body>
   <main class="stage">
@@ -27,7 +27,7 @@
     <section class="phone" aria-label="LINE Bot 手機畫面模擬">
       <div class="phone-status" aria-hidden="true"><span>9:41</span><span class="status-icons"><span class="signal">▮▮▮</span><span>◖</span><span class="battery"><span></span></span></span></div>
       <header class="chat-header">
-        <div class="header-back" aria-hidden="true">‹</div>
+        <button class="header-back" id="back-button" type="button" aria-label="回上一步" title="回上一步" disabled>‹</button>
         <div class="bot-mark" aria-hidden="true"><img src="./assets/資訊平權ICON.jpg" alt=""></div>
         <div class="header-copy"><strong>福利導航</strong><small id="header-language">互動示範 · 非官方服務</small></div>
         <label class="visually-hidden" for="language-select">切換介面語言</label>
@@ -36,8 +36,18 @@
           <option value="ami">阿美語</option>
           <option value="tay">泰雅語</option>
         </select>
-        <button class="header-menu" id="reset-mobile" type="button" aria-label="重新開始對話">⋯</button>
+        <button class="header-menu" id="reset-mobile" type="button" aria-label="回首頁" title="回首頁">⌂</button>
       </header>
+      <div class="accessibility-bar" data-no-translate>
+        <label for="font-size-select">字級</label>
+        <select id="font-size-select" aria-label="調整字體大小">
+          <option value="medium">中</option>
+          <option value="large">大</option>
+          <option value="xlarge">特大</option>
+        </select>
+        <button class="read-button" id="read-button" type="button" aria-label="朗讀最新內容">🔊 朗讀</button>
+        <span class="speech-note" id="speech-note">也可長按訊息</span>
+      </div>
       <div class="demo-ribbon">介面模擬｜請勿輸入個人資料</div>
       <div class="language-hint" id="language-hint" hidden data-no-translate>
         <span id="language-hint-text"></span>
@@ -47,7 +57,7 @@
         <div class="date-pill">今天</div>
         <div class="message-row bot">
           <div class="bubble-avatar" aria-hidden="true"><img src="./assets/資訊平權ICON.jpg" alt=""></div>
-          <div class="bubble"><strong class="native-greeting" id="welcome-greeting" hidden></strong><strong class="native-question" id="welcome-help-question" hidden></strong><span id="welcome-body">您好，我是福利行動導航。<br><br>可以幫您查福利、整理申請文件，也能找到真人協助。</span></div>
+          <div class="bubble"><strong class="native-greeting" id="welcome-greeting" hidden></strong><strong class="native-question" id="welcome-help-question" hidden></strong><span id="welcome-body">您好，我是福利行動導航。<br><br>可以幫您查福利、整理申請文件，也能找到真人協助。</span><details class="chinese-reference" id="welcome-chinese-reference" hidden data-no-translate><summary>查看中文對照</summary><p>您好，我是福利行動導航。可以幫您查福利、整理申請文件，也能找到真人協助。</p></details></div>
         </div>
       </div>
       <div class="chat-bottom">
@@ -65,6 +75,7 @@
         </nav>
       </div>
       <div class="phone-home" aria-hidden="true"></div>
+      <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
     </section>
   </main>
 </body>
