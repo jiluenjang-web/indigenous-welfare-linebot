@@ -2,12 +2,28 @@
 
 這是純 HTML、CSS、JavaScript 網站。用 VS Code 開啟 `dist` 資料夾後，在 Mac 終端機執行 `open index.html` 即可預覽；不需要 `npm run dev`。
 
-手機畫面右上角可切換中文、阿美語、泰雅語。切換時會重新開始示範對話。目前採雙語示範：下列問候與求助句有教材依據；其餘操作與福利說明保留中文，避免未經校對的翻譯造成申請誤解。
+手機畫面右上角可切換中文、海岸阿美語、賽考利克泰雅語，切換時會重新開始示範對話。網站已加入 [Formosan-AI](https://github.com/i3thuan5/Formosan-AI) 的本機翻譯資料層；`nllb-600m-formosan-all-finetune-v2` 模型已為目前 184 組介面文字產生兩種族語初譯，結果存放在 `dist/translations.js`。使用者瀏覽網站時不需連線翻譯，也不會將輸入內容送至外部服務。
+
+**重要：完整族語內容是 AI 初譯，尚未經族語教師逐句校對，不可單獨作為福利申請、資格、金額、期限或文件要求的依據。正式使用前應由對應語別的族語教師與在地使用者完成校對，並保留中文及官方來源。**
 
 - 海岸阿美語：`Nga’ay ho!`、`Padangen ako kiso?`（需要我幫忙嗎？）
 - 賽考利克泰雅語：`lokah su!`、`pragun misu ga?`（請問需要幫忙嗎？）
 
-資料來源：[族語 E 樂園〈生活常用語〉](https://web.klokah.tw/lifesentences/)、[海岸阿美語求助句](https://web.klokah.tw/extension/con_practice/index.php?d=3&l=21&view=dialogue)、[賽考利克泰雅語求助句](https://web.klokah.tw/extension/con_practice/index.php?d=6&l=7&view=dialogue)。正式用於桃園市原住民集會所前，仍需請當地使用者或族語教師確認語別、拼寫及完整介面文案。
+資料來源：[Formosan-AI](https://github.com/i3thuan5/Formosan-AI)、[族語 E 樂園〈生活常用語〉](https://web.klokah.tw/lifesentences/)、[海岸阿美語求助句](https://web.klokah.tw/extension/con_practice/index.php?d=3&l=21&view=dialogue)、[賽考利克泰雅語求助句](https://web.klokah.tw/extension/con_practice/index.php?d=6&l=7&view=dialogue)。正式用於桃園市原住民集會所前，仍需請當地使用者或族語教師確認語別、拼寫及完整介面文案。
+
+新圖示位於 `dist/assets/資訊平權ICON.jpg`，並用於網站 favicon、聊天機器人頭像與訊息頭像。
+
+## 本機 Formosan-AI 模型
+
+大型模型與 Python 環境只存放在本機，不會加入 Git：
+
+- 模型：`models/nllb-600m-formosan-all-finetune-v2/`
+- Python 環境：`.venv/`
+- 完整重建指令：`./tools/rebuild-local-translations.sh`
+
+重建指令會重新擷取介面文字，使用本機模型產生海岸阿美語與賽考利克泰雅語初譯，再更新 `dist/translations.js`。第一次載入模型需要較長時間；產生完畢後，純靜態網站不需啟動模型即可顯示翻譯。
+
+模型權重採 CC BY-NC 4.0，使用及展示時應標示來源，且不可直接用於商業用途。模型輸出仍可能有誤，正式服務前必須由對應語別的族語教師校對。
 
 本原型專注三條完整使用流程：
 

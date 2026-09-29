@@ -1,0 +1,7 @@
+# Local Formosan-AI model files are large and must not be pushed to GitHub.
+models/
+
+# Python runtime files.
+.venv/
+__pycache__/
+*.pyc

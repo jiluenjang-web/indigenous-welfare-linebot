@@ -9,20 +9,77 @@ const languageHintText = document.querySelector('#language-hint-text');
 const languageSource = document.querySelector('#language-source');
 const headerLanguage = document.querySelector('#header-language');
 
-// 族語只顯示已核對教材的短句，福利內容維持中文，避免申請誤解。
+const translationCatalog = window.FORMOSAN_TRANSLATIONS || {};
+const textSources = new WeakMap();
+const attributeSources = new WeakMap();
+const dynamicTranslationFragments = [
+  '可能適用對象', '資料狀態', '查核日', '官方來源', '最後查核', '來源',
+  '已準備', '資格自評', '您要詢問', '建議聯絡方式', '北桃園服務區',
+  '南桃園服務區', '戶籍地區公所', '申請方式', '基本申請條件'
+];
+
+function translatedText(source, language = currentLanguage) {
+  if (language === 'zh' || !source || !translationCatalog[language]) return source;
+  const trimmed = source.trim();
+  const exact = translationCatalog[language][trimmed];
+  if (exact) return source.replace(trimmed, exact);
+  let result = source;
+  const candidates = Object.keys(translationCatalog[language])
+    .filter(key => dynamicTranslationFragments.some(fragment => key.includes(fragment)))
+    .sort((a, b) => b.length - a.length);
+  candidates.forEach(key => {
+    if (result.includes(key)) result = result.split(key).join(translationCatalog[language][key]);
+  });
+  return result;
+}
+
+function localizeTree(root = document.body) {
+  const elements = root.nodeType === Node.ELEMENT_NODE ? [root, ...root.querySelectorAll('*')] : [];
+  elements.forEach(element => {
+    if (element.closest('[data-no-translate], .message-row.user')) return;
+    const saved = attributeSources.get(element) || {};
+    ['aria-label', 'placeholder', 'title'].forEach(name => {
+      if (element.hasAttribute(name) && !(name in saved)) saved[name] = element.getAttribute(name);
+      if (name in saved) element.setAttribute(name, translatedText(saved[name]));
+    });
+    attributeSources.set(element, saved);
+  });
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => {
+    if (node.parentElement?.closest('[data-no-translate], .message-row.user, script, style')) return;
+    if (!textSources.has(node)) textSources.set(node, node.nodeValue);
+    node.nodeValue = translatedText(textSources.get(node));
+  });
+}
+
+function avatarElement() {
+  const avatar = document.createElement('div');
+  avatar.className = 'bubble-avatar';
+  avatar.setAttribute('aria-hidden', 'true');
+  const image = document.createElement('img');
+  image.src = './assets/資訊平權ICON.jpg';
+  image.alt = '';
+  avatar.append(image);
+  return avatar;
+}
+
+// 完整介面使用 Formosan-AI 預先產生初譯；正式發布前仍需族語教師逐句校對。
 const languageModes = {
   zh: { header: '互動原型 · 非官方審核' },
   ami: {
-    header: '海岸阿美語 · 示範', greeting: 'Nga’ay ho!',
+    header: '海岸阿美語 · AI 初譯', greeting: 'Nga’ay ho!',
     helpQuestion: 'Padangen ako kiso?', helpChinese: '需要我幫忙嗎？', lang: 'ami',
-    hint: '海岸阿美語：問候與求助句已核對教材；福利內容暫用中文，待族語老師與在地使用者校對。',
-    source: 'https://web.klokah.tw/extension/con_practice/index.php?d=3&l=21&view=dialogue'
+    hint: '海岸阿美語完整介面由 Formosan-AI 產生初譯，尚未經族語教師校對；福利資格、金額與期限請以中文及官方來源為準。',
+    source: 'https://github.com/i3thuan5/Formosan-AI'
   },
   tay: {
-    header: '賽考利克泰雅語 · 示範', greeting: 'lokah su!',
+    header: '賽考利克泰雅語 · AI 初譯', greeting: 'lokah su!',
     helpQuestion: 'pragun misu ga?', helpChinese: '請問需要幫忙嗎？', lang: 'tay',
-    hint: '賽考利克泰雅語：問候與求助句已核對教材；福利內容暫用中文，待族語老師與在地使用者校對。',
-    source: 'https://web.klokah.tw/extension/con_practice/index.php?d=6&l=7&view=dialogue'
+    hint: '賽考利克泰雅語完整介面由 Formosan-AI 產生初譯，尚未經族語教師校對；福利資格、金額與期限請以中文及官方來源為準。',
+    source: 'https://github.com/i3thuan5/Formosan-AI'
   }
 };
 
@@ -75,27 +132,21 @@ function addBubble(text, speaker = 'bot') {
   const row = document.createElement('div');
   row.className = `message-row ${speaker}`;
   if (speaker === 'bot') {
-    const avatar = document.createElement('div');
-    avatar.className = 'bubble-avatar';
-    avatar.setAttribute('aria-hidden', 'true');
-    avatar.textContent = '福';
-    row.append(avatar);
+    row.append(avatarElement());
   }
   const bubble = document.createElement('div');
   bubble.className = 'bubble';
   bubble.textContent = text;
   row.append(bubble);
   messages.append(row);
+  localizeTree(row);
   scrollToLatest();
 }
 
 function addCard({ tag, title, description, bullets = [], meta = [], actions = [] }) {
   const row = document.createElement('div');
   row.className = 'message-row bot';
-  const avatar = document.createElement('div');
-  avatar.className = 'bubble-avatar';
-  avatar.setAttribute('aria-hidden', 'true');
-  avatar.textContent = '福';
+  const avatar = avatarElement();
   const bubble = document.createElement('div');
   bubble.className = 'bubble card-message';
   if (tag) {
@@ -154,15 +205,14 @@ function addCard({ tag, title, description, bullets = [], meta = [], actions = [
   }
   row.append(avatar, bubble);
   messages.append(row);
+  localizeTree(row);
   scrollToLatest();
 }
 
 function addChecklist(record) {
   const row = document.createElement('div');
   row.className = 'message-row bot';
-  const avatar = document.createElement('div');
-  avatar.className = 'bubble-avatar';
-  avatar.textContent = '福';
+  const avatar = avatarElement();
   const bubble = document.createElement('div');
   bubble.className = 'bubble card-message';
   const title = document.createElement('strong');
@@ -197,6 +247,7 @@ function addChecklist(record) {
   bubble.append(title, note, progress, list, controls);
   row.append(avatar, bubble);
   messages.append(row);
+  localizeTree(row);
   scrollToLatest();
 }
 
@@ -209,16 +260,20 @@ function setQuickActions(actions) {
     button.textContent = label;
     quickActions.append(button);
   });
+  localizeTree(quickActions);
 }
 
 function applyLanguage(mode) {
   const config = languageModes[mode] || languageModes.zh;
   currentLanguage = languageModes[mode] ? mode : 'zh';
+  const translationReady = currentLanguage === 'zh' || Object.keys(translationCatalog[currentLanguage] || {}).length >= 100;
   languageSelect.value = currentLanguage;
-  headerLanguage.textContent = config.header;
+  headerLanguage.textContent = translationReady ? config.header : `${currentLanguage === 'ami' ? '海岸阿美語' : '賽考利克泰雅語'} · 部分示範`;
   languageHint.hidden = currentLanguage === 'zh';
   if (currentLanguage !== 'zh') {
-    languageHintText.textContent = config.hint;
+    languageHintText.textContent = translationReady
+      ? config.hint
+      : 'Formosan-AI 公開翻譯服務目前無法完成請求，因此先保留中文福利內容，只顯示已核對的問候與求助句；服務恢復後可產生完整 AI 初譯。';
     languageSource.href = config.source;
   }
   messages.innerHTML = firstMessage;
@@ -229,12 +284,13 @@ function applyLanguage(mode) {
   helpQuestion.hidden = !config.helpQuestion;
   if (config.helpQuestion) { helpQuestion.textContent = config.helpQuestion; helpQuestion.lang = config.lang; }
   document.querySelector('#welcome-body').textContent = config.helpChinese
-    ? `${config.helpChinese}\n我可以幫您查福利、整理申請文件，也能找到真人協助。`
+    ? translatedText('可以幫您查福利、整理申請文件，也能找到真人協助。')
     : '您好，我是福利行動導航。\n\n可以幫您查福利、整理申請文件，也能找到真人協助。';
   selectedBenefit = null;
   helpReason = '';
   input.value = '';
   setQuickActions(mainActions);
+  localizeTree(document.body);
   scrollToLatest();
 }
 
