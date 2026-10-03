@@ -43,3 +43,28 @@ body[data-font-size="xlarge"] .card-title{font-size:1.2rem}
 body[data-font-size="xlarge"] .card-actions button,body[data-font-size="xlarge"] .card-actions a,body[data-font-size="xlarge"] .quick-actions button,body[data-font-size="xlarge"] .check-list label{font-size:1.02rem}
 body[data-font-size="xlarge"] .card-actions button,body[data-font-size="xlarge"] .card-actions a,body[data-font-size="xlarge"] .quick-actions button{min-height:44px}
 @media(max-width:350px){.speech-note{display:none}.chat-header{gap:5px}.language-select{max-width:74px}.bot-mark{width:36px;height:36px}.accessibility-bar{padding-inline:8px}}
+
+/* Branded conversation background */
+.messages{
+  background-color:#f1e9de;
+  background-image:url("./assets/chat-background.png");
+  background-position:center center;
+  background-repeat:no-repeat;
+  background-size:cover;
+}
+
+/* Translucent bubbles keep the artwork visible without reducing readability. */
+.bubble{
+  background:rgba(255,255,255,.38);
+  border:1px solid rgba(255,255,255,.52);
+  box-shadow:0 2px 9px rgba(67,55,40,.14);
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
+.user .bubble{
+  background:rgba(181,237,200,.46);
+  border-color:rgba(224,250,232,.56);
+}
+.warning-card{background:rgba(255,250,240,.48)}
+.error-card{background:rgba(255,247,245,.48)}
+.empty-card{background:rgba(251,253,251,.48)}
