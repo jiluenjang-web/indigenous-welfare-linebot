@@ -1,0 +1,268 @@
+// 此檔案由 tools/build-welfare-data.mjs 自動產生，請勿直接編輯。
+window.WELFARE_CATALOG = {
+  "schemaVersion": "1.0",
+  "scope": "桃園市原住民長者優先資訊",
+  "checkedAt": "2026-10-04",
+  "notice": "本資料僅供初步導引，不代表資格核定。金額、期間及文件要求以主管機關最新公告與承辦人員回覆為準。",
+  "benefits": [
+    {
+      "id": "taoyuan-indigenous-senior-card",
+      "title": "桃園市原民敬老卡",
+      "category": "mobility",
+      "audience": [
+        "設籍桃園市",
+        "55歲以上原住民"
+      ],
+      "summary": "提供交通、運動場館等社福點數優惠；復興區每月1000點，其他地區800點。",
+      "documents": [
+        "國民身分證正本",
+        "6個月內2吋彩色照片1張",
+        "戶口名簿或戶籍謄本影本",
+        "代辦時另備申請表與受託人身分證正本"
+      ],
+      "steps": [
+        "備齊文件",
+        "前往桃園市13區公所，可跨區申辦",
+        "現場審核與發卡"
+      ],
+      "serviceUnit": "桃園市各區公所",
+      "availability": {
+        "status": "active",
+        "label": "持續受理"
+      },
+      "source": {
+        "name": "桃園市市民卡－原民敬老卡",
+        "url": "https://typass.tycg.gov.tw/citizen-card-intro/view?id=06",
+        "checkedAt": "2026-10-04"
+      }
+    },
+    {
+      "id": "national-pension-indigenous-payment",
+      "title": "國民年金原住民給付",
+      "category": "income",
+      "audience": [
+        "55歲至64歲原住民",
+        "在國內設有戶籍",
+        "無法定排除情形"
+      ],
+      "summary": "官方頁面目前列示每月4,049元，從符合條件且申請當月起發給至年滿65歲前一個月。",
+      "documents": [
+        "原住民給付申請書",
+        "金融機構存簿封面影本",
+        "主張不動產扣除時另附財稅或使用證明"
+      ],
+      "steps": [
+        "確認年齡與排除條件",
+        "填寫申請書或使用勞保局e化服務系統",
+        "郵寄或送至勞保局各地辦事處"
+      ],
+      "serviceUnit": "勞動部勞工保險局",
+      "availability": {
+        "status": "active",
+        "label": "持續受理"
+      },
+      "source": {
+        "name": "勞保局－原住民給付請領資格及給付金額",
+        "url": "https://www.bli.gov.tw/0014344.htm",
+        "checkedAt": "2026-10-04",
+        "amountMustBeRechecked": true
+      }
+    },
+    {
+      "id": "taoyuan-middle-low-income-senior-allowance",
+      "title": "桃園市中低收入老人生活津貼",
+      "category": "income",
+      "audience": [
+        "年滿65歲",
+        "設籍並實際居住桃園市",
+        "家庭所得與財產符合標準"
+      ],
+      "summary": "官方頁面目前依家庭所得級距列示每月8,329元或4,164元生活津貼。",
+      "documents": [
+        "申請書",
+        "最近3個月全戶戶籍謄本",
+        "申請人私章",
+        "其他所得、財產或身分證明",
+        "代辦時另備委託書"
+      ],
+      "steps": [
+        "先電洽戶籍地區公所確認文件",
+        "備齊資料",
+        "向戶籍地區公所社會課申請"
+      ],
+      "serviceUnit": "戶籍所在地區公所社會課",
+      "availability": {
+        "status": "active",
+        "label": "持續受理"
+      },
+      "source": {
+        "name": "桃園市政府社會局－中低收入老人生活津貼",
+        "url": "https://sab.tycg.gov.tw/cp.aspx?Create=1&n=7357",
+        "checkedAt": "2026-10-04",
+        "amountMustBeRechecked": true
+      }
+    },
+    {
+      "id": "taoyuan-indigenous-emergency-relief",
+      "title": "桃園市原住民急難救助",
+      "category": "emergency",
+      "audience": [
+        "設籍桃園市",
+        "具有原住民身分",
+        "遭遇死亡、醫療、重大災害或生活急難"
+      ],
+      "summary": "依案件提供死亡救助、醫療補助、重大災害救助或生活扶助；多數案件須在事件發生後3個月內申請。",
+      "documents": [
+        "申請表",
+        "金融機構存簿封面影本",
+        "領據",
+        "依類型附死亡、醫療、所得財產或災害證明"
+      ],
+      "steps": [
+        "確認急難類型與期限",
+        "備齊該類型證明",
+        "送至原民福利科或各區公所人文課"
+      ],
+      "serviceUnit": "桃園市原住民族行政局原民福利科／各區公所人文課",
+      "contact": "03-3322101 分機6686-6687",
+      "availability": {
+        "status": "active",
+        "label": "事件發生後應儘快申請"
+      },
+      "source": {
+        "name": "桃園市政府－原住民業務急難救助",
+        "url": "https://www.tycg.gov.tw/News_Content.aspx?n=97&s=1554398",
+        "checkedAt": "2026-10-04"
+      }
+    },
+    {
+      "id": "taoyuan-indigenous-culture-health-station",
+      "title": "桃園市原住民族文化健康站",
+      "category": "care",
+      "audience": [
+        "55歲以上輕度失能、獨居、亞健康或衰弱原住民長者",
+        "55歲以下可自理的原住民身心障礙者"
+      ],
+      "summary": "提供健康促進、餐飲、電話問安、居家關懷、生活與照顧諮詢及轉介等在地服務。",
+      "documents": [
+        "實際收案文件應先電洽就近站點確認"
+      ],
+      "steps": [
+        "從官方開放資料查找最近站點",
+        "電洽站點說明需求",
+        "由站點確認服務與轉介"
+      ],
+      "serviceUnit": "桃園市原住民族文化健康站",
+      "contact": "原民福利科 03-3322101 分機6686-6687",
+      "availability": {
+        "status": "active",
+        "label": "依各站服務量能受理"
+      },
+      "source": {
+        "name": "桃園開放資料－原住民族文化健康站資訊",
+        "url": "https://opendata.tycg.gov.tw/datalist/7d7bcba6-5747-4734-a288-6bc9e43f1767",
+        "checkedAt": "2026-10-04",
+        "annualListMustBeRechecked": true
+      }
+    },
+    {
+      "id": "taoyuan-long-term-care",
+      "title": "桃園市長期照顧服務",
+      "category": "care",
+      "audience": [
+        "55歲以上失能原住民",
+        "65歲以上失能長者",
+        "全年齡失智症者或失能身心障礙者"
+      ],
+      "summary": "經照顧管理專員評估後，依需求連結居家、日間照顧、輔具、交通接送或喘息等服務。",
+      "documents": [
+        "先撥1966或提出網路申請；實際評估所需資料由承辦單位說明"
+      ],
+      "steps": [
+        "撥1966、網路或臨櫃申請",
+        "照顧管理專員到宅評估",
+        "核定服務與補助額度",
+        "討論照顧計畫並連結服務"
+      ],
+      "serviceUnit": "桃園市長期照顧管理中心",
+      "contact": "1966",
+      "availability": {
+        "status": "active",
+        "label": "持續受理"
+      },
+      "source": {
+        "name": "桃園市政府衛生局－長期照顧管理中心",
+        "url": "https://care.tycg.gov.tw/cp.aspx?Create=1&n=371",
+        "checkedAt": "2026-10-04"
+      }
+    },
+    {
+      "id": "taoyuan-indigenous-senior-dentures-2026",
+      "title": "115年度桃園市原住民族長者裝置假牙補助",
+      "category": "medical",
+      "audience": [
+        "設籍桃園市",
+        "55歲以上原住民長者",
+        "經牙醫師評估需裝置假牙"
+      ],
+      "summary": "115年度計畫原可補助裝置假牙，5年內含本年度最高補助4萬元；官方已公告本年度經費趨近用罄。",
+      "documents": [
+        "本年度已停止受理；下一年度重新開放時，應以新公告與合約牙科院所說明為準"
+      ],
+      "steps": [
+        "目前不引導送件",
+        "電洽原民福利科詢問次年度計畫",
+        "新公告發布後再更新狀態"
+      ],
+      "serviceUnit": "桃園市原住民族行政局原民福利科",
+      "contact": "03-3322101 分機6686",
+      "availability": {
+        "status": "closed",
+        "label": "115年度已停止受理",
+        "effectiveDate": "2026-07-30"
+      },
+      "source": {
+        "name": "桃園市原民局－115年度假牙補助停止受理公告",
+        "url": "https://ipb.tycg.gov.tw/News_Content.aspx?n=10988&s=1718115&sms=14505",
+        "checkedAt": "2026-10-04",
+        "annualProgram": true
+      }
+    },
+    {
+      "id": "taoyuan-indigenous-housing-purchase-repair",
+      "title": "桃園市經濟弱勢原住民族建購及修繕住宅補助",
+      "category": "housing",
+      "audience": [
+        "原住民申請人",
+        "設籍並實際居住桃園市4個月以上",
+        "所得、財產及住宅狀況符合要點"
+      ],
+      "summary": "建購住宅每戶補助24萬元；修繕住宅每戶最高補助15萬元，須依當年度公告受理期間申請。",
+      "documents": [
+        "3個月內全戶戶籍謄本",
+        "全戶最新所得與財產清單或符合要點的弱勢證明",
+        "建物登記謄本或替代證明",
+        "住宅照片",
+        "修繕案另需估價單及切結書",
+        "存簿封面影本與領據"
+      ],
+      "steps": [
+        "留意當年度受理公告",
+        "向戶籍所在地區公所確認資格與文件",
+        "在公告期間備齊文件申請"
+      ],
+      "serviceUnit": "戶籍所在地區公所",
+      "contact": "原民福利科 03-3322101 分機6686-6687",
+      "availability": {
+        "status": "verify-window",
+        "label": "需確認當年度受理期間"
+      },
+      "source": {
+        "name": "桃園市政府補助經濟弱勢原住民族建購及修繕住宅要點",
+        "url": "https://ipb.tycg.gov.tw/News_Content.aspx?n=11006&s=1578621",
+        "checkedAt": "2026-10-04",
+        "applicationWindowMustBeRechecked": true
+      }
+    }
+  ]
+};

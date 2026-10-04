@@ -88,38 +88,31 @@ const languageModes = {
   }
 };
 
-const welfareData = {
-  elderCard: {
-    title: '桃園市原民敬老卡', category: '交通外出',
-    summary: '協助符合條件的原住民長者申請市民卡與交通點數補助。',
-    eligibility: '設籍桃園市，且年滿 55 歲的原住民。最終資格由受理機關審核。',
-    documents: ['國民身分證正本', '最新戶口名簿或戶籍謄本影本（註記原住民身分）', '6 個月內 2 吋照片，或依現場規定拍照', '委託代辦時：委託書及代理人身分證明'],
-    steps: ['先完成基本資格快篩', '將文件清單逐項備齊', '到可受理的桃園市區公所辦理', '由承辦人員審核與說明後續進度'],
-    sourceName: '桃園市市民卡官方說明',
-    sourceUrl: 'https://typass.tycg.gov.tw/citizen-card-intro/view?id=06',
-    verified: '2026-09-28', status: '已對照官方頁面'
-  },
-  living: {
-    title: '生活津貼與經濟協助', category: '經濟生活',
-    summary: '用生活情境找到可能相關的老年給付、生活津貼與急難救助。',
-    eligibility: '各項福利的年齡、居住、所得與資產條件不同，需依戶籍地及福利項目逐一確認。',
-    documents: ['身分證明與戶籍資料', '金融帳戶或郵局存簿', '主管機關要求的所得、財產或其他證明'],
-    steps: ['選擇目前生活困難', '比對可能的福利項目', '向區公所或主管機關確認最新資格', '備齊文件後送件'],
-    sourceName: '桃園市福利補助開放資料',
-    sourceUrl: 'https://data.gov.tw/dataset/26032',
-    verified: '2026-09-28', status: '流程示範，項目資格需即時查核'
-  },
-  medical: {
-    title: '就醫、健保與假牙協助', category: '就醫照顧',
-    summary: '整理健保費、醫療費與假牙補助的查詢及申請方向。',
-    eligibility: '補助對象、醫療需求、診斷與所得條件依各方案而異，應由承辦單位確認。',
-    documents: ['身分證明與健保卡', '原住民身分或戶籍證明', '診斷書、醫療費用單據或治療計畫（視項目而定）'],
-    steps: ['選擇需要的醫療協助', '查看對應方案與官方來源', '由醫療機構或承辦單位確認文件', '按指定窗口申請'],
-    sourceName: '桃園市福利補助開放資料',
-    sourceUrl: 'https://data.gov.tw/dataset/26032',
-    verified: '2026-09-28', status: '流程示範，項目資格需即時查核'
-  }
+const welfareCatalog = window.WELFARE_CATALOG || { benefits: [], notice: '', checkedAt: '' };
+const SENIOR_CARD_ID = 'taoyuan-indigenous-senior-card';
+const categoryConfiguration = {
+  income: { flow: 'living', label: '經濟生活' },
+  emergency: { flow: 'living', label: '急難協助' },
+  housing: { flow: 'living', label: '住宅協助' },
+  care: { flow: 'care', label: '照顧服務' },
+  medical: { flow: 'care', label: '就醫照顧' },
+  mobility: { flow: 'mobility', label: '交通外出' }
 };
+
+const welfareData = Object.fromEntries(welfareCatalog.benefits.map(benefit => {
+  const category = categoryConfiguration[benefit.category] || { flow: 'living', label: '其他福利' };
+  return [benefit.id, {
+    ...benefit,
+    category: category.label,
+    flowCategory: category.flow,
+    eligibility: benefit.audience.join('、'),
+    sourceName: benefit.source.name,
+    sourceUrl: benefit.source.url,
+    verified: benefit.source.checkedAt || welfareCatalog.checkedAt,
+    status: benefit.availability.label,
+    availabilityStatus: benefit.availability.status
+  }];
+}));
 
 let currentLanguage = 'zh';
 let selectedBenefit = null;
@@ -472,13 +465,18 @@ function applyLanguage(mode, { resetHistory = true } = {}) {
 }
 
 function showBenefitChoices(category) {
-  const ids = category === 'living' ? ['living'] : category === 'care' ? ['medical'] : ['elderCard'];
+  const ids = Object.keys(welfareData).filter(id => welfareData[id].flowCategory === category);
+  if (ids.length === 0) {
+    showNoResults();
+    return;
+  }
   ids.forEach(id => {
     const item = welfareData[id];
+    const isClosed = item.availabilityStatus === 'closed';
     addCard({
       tag: item.category, title: item.title, description: item.summary,
       meta: [`資料狀態：${item.status}`, `查核日：${item.verified}`],
-      actions: [{ label: '查看資格與步驟', action: `detail:${id}`, primary: true }],
+      actions: [{ label: isClosed ? '查看停止受理資訊' : '查看資格與步驟', action: `detail:${id}`, primary: true }],
       progress: { current: 2, total: 3, label: '找福利' }
     });
   });
@@ -487,6 +485,10 @@ function showBenefitChoices(category) {
 
 function showBenefitDetail(id) {
   const item = welfareData[id];
+  if (!item) {
+    showNoResults();
+    return;
+  }
   selectedBenefit = id;
   const verifiedAt = new Date(`${item.verified}T00:00:00`);
   const ageInDays = Math.floor((Date.now() - verifiedAt.getTime()) / 86400000);
@@ -495,33 +497,60 @@ function showBenefitDetail(id) {
     tag: item.category, title: item.title, description: `可能適用對象：${item.eligibility}`,
     bullets: item.steps,
     meta: [`官方來源：${item.sourceName}`, `最後查核：${item.verified}`],
-    actions: [
-      { label: '開始申請準備', action: `prepare:${id}`, primary: true },
-      { label: '查看官方來源 ↗', href: item.sourceUrl },
-      { label: '連結無法開啟？', action: `source-help:${id}` }
-    ],
+    actions: item.availabilityStatus === 'closed'
+      ? [
+          { label: '查看停止受理公告 ↗', href: item.sourceUrl, primary: true },
+          { label: '詢問下年度計畫', action: 'human' },
+          { label: '連結無法開啟？', action: `source-help:${id}` }
+        ]
+      : [
+          { label: '開始申請準備', action: `prepare:${id}`, primary: true },
+          { label: '查看官方來源 ↗', href: item.sourceUrl },
+          { label: '連結無法開啟？', action: `source-help:${id}` }
+        ],
     progress: { current: 3, total: 3, label: '找福利' }
   });
-  if (isExpired || item.status.includes('需即時查核')) {
+  if (isExpired || item.availabilityStatus !== 'active') {
+    const isClosed = item.availabilityStatus === 'closed';
     addCard({
-      tag: isExpired ? '資料已超過 90 天未查核' : '資料待確認',
-      title: isExpired ? '這筆資料可能已過期' : '這筆資料不適合單獨作為申請依據',
-      description: '系統已保留官方來源與查核日；請先開啟官方頁面，或請真人窗口確認最新資格、金額與期限。',
+      tag: isClosed ? '已停止受理' : isExpired ? '資料已超過 90 天未查核' : '受理期間待確認',
+      title: isClosed ? item.status : isExpired ? '這筆資料可能已過期' : '申請前必須確認目前是否開放',
+      description: isClosed
+        ? '目前不提供送件引導，請查看官方公告或向承辦單位詢問下一年度計畫。'
+        : '系統已保留官方來源與查核日；請先開啟官方頁面，或請真人窗口確認最新資格、金額與期限。',
       actions: [{ label: '開啟官方來源', href: item.sourceUrl, primary: true }, { label: '找真人確認', action: 'human' }],
-      tone: 'warning-card'
+      tone: isClosed ? 'error-card' : 'warning-card'
     });
   }
   addBubble('重要提醒：系統只能協助整理資訊，不代表已通過申請；實際資格以承辦機關最新審核為準。');
-  setQuickActions([{ label: '申請準備', action: `prepare:${id}` }, { label: '找真人', action: 'human' }]);
+  setQuickActions(item.availabilityStatus === 'closed'
+    ? [{ label: '查看其他福利', action: 'benefits' }, { label: '找真人', action: 'human' }]
+    : [{ label: '申請準備', action: `prepare:${id}` }, { label: '找真人', action: 'human' }]);
 }
 
 function startPreparation(id) {
-  selectedBenefit = id || selectedBenefit || 'elderCard';
+  selectedBenefit = id || selectedBenefit || SENIOR_CARD_ID;
   const item = welfareData[selectedBenefit];
+  if (!item) {
+    showNoResults();
+    return;
+  }
+  if (item.availabilityStatus === 'closed') {
+    addCard({
+      tag: '已停止受理',
+      title: `${item.title}｜目前不開放申請`,
+      description: '為避免使用過期資訊，本系統不提供這一年度的文件勾選或送件引導。',
+      meta: [`資料狀態：${item.status}`, `查核日：${item.verified}`],
+      actions: [{ label: '查看官方公告 ↗', href: item.sourceUrl, primary: true }, { label: '找真人確認', action: 'human' }],
+      tone: 'error-card'
+    });
+    setQuickActions([{ label: '選擇其他福利', action: 'prepare' }, { label: '找真人', action: 'human' }]);
+    return;
+  }
   addCard({
-    tag: selectedBenefit === 'elderCard' ? '資格自評｜第 1 題／共 3 題' : '資格與文件確認', title: `${item.title}｜先確認基本條件`,
-    description: selectedBenefit === 'elderCard' ? '請先回答：申請人是否設籍桃園市？' : '由於每項津貼條件不同，建議先整理文件，再由承辦窗口確認資格。',
-    actions: selectedBenefit === 'elderCard'
+    tag: selectedBenefit === SENIOR_CARD_ID ? '資格自評｜第 1 題／共 3 題' : '資格與文件確認', title: `${item.title}｜先確認基本條件`,
+    description: selectedBenefit === SENIOR_CARD_ID ? '請先回答：申請人是否設籍桃園市？' : `可能適用對象：${item.eligibility}。正式資格仍由承辦單位審核。`,
+    actions: selectedBenefit === SENIOR_CARD_ID
       ? [{ label: '是', action: 'qualify:resident', primary: true }, { label: '否／不確定', action: 'qualify:resident-no' }]
       : [{ label: '整理文件', action: 'show-checklist', primary: true }, { label: '請真人協助', action: 'human' }],
     progress: { current: 2, total: 4, label: '申請準備' }
@@ -558,7 +587,7 @@ function showNoResults(query = '') {
 }
 
 function showSourceError(id) {
-  const item = welfareData[id] || welfareData[selectedBenefit || 'elderCard'];
+  const item = welfareData[id] || welfareData[selectedBenefit || SENIOR_CARD_ID];
   addCard({
     tag: '連結無法開啟',
     title: '先不要依賴這個連結申請',
@@ -579,7 +608,9 @@ function buildSummaryText(item) {
     `可能適用對象：${item.eligibility}`,
     `已準備文件：${prepared}`,
     `待確認或待準備：${missing}`,
-    `下一步：先聯絡桃園市區公所或主管機關，確認最新文件、受理時間與資格。`,
+    `辦理單位：${item.serviceUnit}`,
+    ...(item.contact ? [`聯絡方式：${item.contact}`] : []),
+    `下一步：先聯絡辦理單位，確認最新文件、受理時間與資格。`,
     `資料來源：${item.sourceName}`,
     `查核日：${item.verified}`,
     '提醒：本摘要不代表已通過政府審核。'
@@ -587,7 +618,7 @@ function buildSummaryText(item) {
 }
 
 function showApplicationSummary() {
-  const item = welfareData[selectedBenefit || 'elderCard'];
+  const item = welfareData[selectedBenefit || SENIOR_CARD_ID];
   const summaryText = buildSummaryText(item);
   addCard({
     tag: '申請摘要',
@@ -596,7 +627,8 @@ function showApplicationSummary() {
     bullets: [
       `可能適用對象：${item.eligibility}`,
       `待準備：${item.documents.filter((_, index) => !preparedDocumentIndexes.includes(index)).join('、') || '無'}`,
-      '下一步：先聯絡區公所或主管機關，確認最新資格與受理時間'
+      `辦理單位：${item.serviceUnit}`,
+      '下一步：先聯絡辦理單位，確認最新資格與受理時間'
     ],
     meta: [`來源：${item.sourceName}`, `查核日：${item.verified}`, '本摘要不代表正式核定'],
     actions: [
@@ -612,7 +644,7 @@ function showApplicationSummary() {
 }
 
 async function copyApplicationSummary() {
-  const item = welfareData[selectedBenefit || 'elderCard'];
+  const item = welfareData[selectedBenefit || SENIOR_CARD_ID];
   const text = buildSummaryText(item);
   try {
     await navigator.clipboard.writeText(text);
@@ -672,10 +704,13 @@ function choose(action) {
     addCard({
       tag: '做得到', title: '要準備哪一項申請？',
       description: '選擇項目後，系統會帶您完成資格自評、文件清單與辦理方式。',
-      actions: Object.entries(welfareData).map(([id, item]) => ({ label: item.title, action: `prepare:${id}` })),
+      actions: Object.entries(welfareData).map(([id, item]) => ({
+        label: item.availabilityStatus === 'closed' ? `${item.title}（停止受理）` : item.title,
+        action: `prepare:${id}`
+      })),
       progress: { current: 1, total: 4, label: '申請準備' }
     });
-    setQuickActions([{ label: '原民敬老卡', action: 'prepare:elderCard' }, { label: '找真人', action: 'human' }]);
+    setQuickActions([{ label: '原民敬老卡', action: `prepare:${SENIOR_CARD_ID}` }, { label: '找真人', action: 'human' }]);
     return;
   }
   if (action.startsWith('prepare:')) { startPreparation(dataId); return; }
@@ -696,18 +731,18 @@ function choose(action) {
     return;
   }
   if (action === 'show-checklist') {
-    addChecklist(welfareData[selectedBenefit || 'elderCard']);
+    addChecklist(welfareData[selectedBenefit || SENIOR_CARD_ID]);
     setQuickActions([{ label: '找真人', action: 'human' }, { label: '回主選單', action: 'menu' }]);
     return;
   }
   if (action === 'apply-location') {
-    const item = welfareData[selectedBenefit || 'elderCard'];
+    const item = welfareData[selectedBenefit || SENIOR_CARD_ID];
     addCard({
       tag: '辦理方式', title: '確認後前往辦理',
-      description: selectedBenefit === 'elderCard' ? '建議先聯絡桃園市區公所，確認最新文件、受理時間與是否可跨區辦理。' : '請先向官方承辦單位確認最新資格與送件方式。',
+      description: selectedBenefit === SENIOR_CARD_ID ? '建議先聯絡桃園市區公所，確認最新文件、受理時間與是否可跨區辦理。' : `建議先聯絡「${item.serviceUnit}」，確認最新資格與送件方式。`,
       bullets: item.steps,
-      meta: [`來源：${item.sourceName}`, `查核日：${item.verified}`],
-      actions: [{ label: '開啟官方說明 ↗', href: item.sourceUrl }, { label: '完成並查看申請摘要', action: 'summary', primary: true }, { label: '連結無法開啟？', action: `source-help:${selectedBenefit || 'elderCard'}` }],
+      meta: [`辦理單位：${item.serviceUnit}`, ...(item.contact ? [`聯絡方式：${item.contact}`] : []), `來源：${item.sourceName}`, `查核日：${item.verified}`],
+      actions: [{ label: '開啟官方說明 ↗', href: item.sourceUrl }, { label: '完成並查看申請摘要', action: 'summary', primary: true }, { label: '連結無法開啟？', action: `source-help:${selectedBenefit || SENIOR_CARD_ID}` }],
       progress: { current: 4, total: 4, label: '申請準備' }
     });
     setQuickActions([{ label: '查看申請摘要', action: 'summary' }, { label: '真人協助', action: 'human' }]);
@@ -761,7 +796,7 @@ document.addEventListener('change', event => {
   const list = event.target.closest('.check-list');
   preparedDocumentIndexes = [...list.querySelectorAll('input:checked')].map(item => Number(item.value));
   const progress = list.previousElementSibling;
-  const record = welfareData[selectedBenefit || 'elderCard'];
+  const record = welfareData[selectedBenefit || SENIOR_CARD_ID];
   if (progress?.classList.contains('check-progress')) progress.textContent = `已準備 ${preparedDocumentIndexes.length} / ${record.documents.length}`;
 });
 composer.addEventListener('submit', event => {
