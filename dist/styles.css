@@ -14,6 +14,8 @@
 .accessibility-bar label{font-weight:800}
 .accessibility-bar select,.read-button{min-height:29px;border:1px solid #b7d7c1;border-radius:8px;background:#fff;color:#236241;font:inherit;font-weight:750;padding:4px 7px}
 .read-button{margin-left:2px}
+.read-button[data-speech-state="reading"]{background:#e4f5e9;border-color:#5eb77a;color:#176a3f}
+.read-button[data-speech-state="paused"]{background:#fff4d7;border-color:#d5a83d;color:#72520c}
 .speech-note{margin-left:auto;color:#6d7d73;font-size:.66rem;white-space:nowrap}
 .bubble{min-width:0;overflow-wrap:anywhere;word-break:break-word;touch-action:pan-y}
 .card-title,.card-label{max-width:100%;overflow-wrap:anywhere}

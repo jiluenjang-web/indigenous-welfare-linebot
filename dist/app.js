@@ -128,6 +128,7 @@ let preparedDocumentIndexes = [];
 let navigationHistory = [];
 let toastTimer = null;
 let longPressTimer = null;
+let activeUtterance = null;
 
 function showToast(message) {
   window.clearTimeout(toastTimer);
@@ -162,7 +163,7 @@ function restorePreviousStep() {
     showToast('已經在第一步');
     return;
   }
-  window.speechSynthesis?.cancel();
+  stopSpeech();
   messages.innerHTML = snapshot.messages;
   quickActions.innerHTML = snapshot.quickActions;
   selectedBenefit = snapshot.selectedBenefit;
@@ -216,17 +217,67 @@ function latestReadableText() {
   return clone.textContent.replace(/\s+/g, ' ').trim();
 }
 
+function updateSpeechButton(state = 'idle') {
+  const modes = {
+    idle: { text: '🔊 朗讀', label: '朗讀最新內容' },
+    reading: { text: '⏸ 暫停', label: '暫停朗讀' },
+    paused: { text: '▶ 繼續', label: '繼續朗讀' }
+  };
+  const mode = modes[state] || modes.idle;
+  readButton.dataset.speechState = state;
+  readButton.textContent = mode.text;
+  readButton.setAttribute('aria-label', mode.label);
+}
+
+function stopSpeech() {
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  activeUtterance = null;
+  updateSpeechButton('idle');
+}
+
 function speakText(text = latestReadableText()) {
   if (!('speechSynthesis' in window) || !text) {
     showToast('這個瀏覽器無法朗讀內容');
     return;
   }
-  window.speechSynthesis.cancel();
+  stopSpeech();
   const utterance = new SpeechSynthesisUtterance(text);
+  activeUtterance = utterance;
   utterance.lang = currentLanguage === 'zh' ? 'zh-TW' : 'und';
   utterance.rate = 0.82;
+  utterance.addEventListener('start', () => {
+    if (activeUtterance === utterance) updateSpeechButton('reading');
+  });
+  const finish = () => {
+    if (activeUtterance !== utterance) return;
+    activeUtterance = null;
+    updateSpeechButton('idle');
+  };
+  utterance.addEventListener('end', finish);
+  utterance.addEventListener('error', finish);
   window.speechSynthesis.speak(utterance);
+  updateSpeechButton('reading');
   showToast(currentLanguage === 'zh' ? '正在朗讀最新內容' : '使用系統語音試讀，族語發音仍需真人校對');
+}
+
+function toggleSpeech() {
+  if (!('speechSynthesis' in window)) {
+    showToast('這個瀏覽器無法朗讀內容');
+    return;
+  }
+  if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+    updateSpeechButton('reading');
+    showToast('已繼續朗讀');
+    return;
+  }
+  if (window.speechSynthesis.speaking && activeUtterance) {
+    window.speechSynthesis.pause();
+    updateSpeechButton('paused');
+    showToast('已暫停朗讀');
+    return;
+  }
+  speakText();
 }
 
 const mainActions = [
@@ -383,6 +434,7 @@ function setQuickActions(actions) {
 }
 
 function applyLanguage(mode, { resetHistory = true } = {}) {
+  stopSpeech();
   const config = languageModes[mode] || languageModes.zh;
   currentLanguage = languageModes[mode] ? mode : 'zh';
   const translationReady = currentLanguage === 'zh' || Object.keys(translationCatalog[currentLanguage] || {}).length >= 100;
@@ -725,7 +777,7 @@ for (const id of ['reset-desktop', 'reset-mobile']) {
 }
 languageSelect.addEventListener('change', () => applyLanguage(languageSelect.value));
 backButton.addEventListener('click', restorePreviousStep);
-readButton.addEventListener('click', () => speakText());
+readButton.addEventListener('click', toggleSpeech);
 
 fontSizeSelect.addEventListener('change', () => {
   document.body.dataset.fontSize = fontSizeSelect.value;
