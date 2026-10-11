@@ -1,0 +1,16 @@
+// 此檔案由 tools/check-welfare-updates.mjs 自動產生，請勿直接編輯。
+window.WELFARE_REVIEW_QUEUE = {
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-10-11T05:59:56.158Z",
+  "pending": [],
+  "history": [],
+  "lastRun": {
+    "startedAt": "2026-10-11T05:59:50.379Z",
+    "finishedAt": "2026-10-11T05:59:56.158Z",
+    "checked": 8,
+    "changed": 0,
+    "initialized": 0,
+    "failed": 0,
+    "errors": []
+  }
+};

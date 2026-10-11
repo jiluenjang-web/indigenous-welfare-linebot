@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173a5e">
+  <meta name="description" content="福利行動導航本機資料管理後台。">
+  <title>福利資料管理｜福利行動導航</title>
+  <link rel="icon" type="image/jpeg" href="./assets/資訊平權ICON.jpg">
+  <link rel="stylesheet" href="./admin.css?v=20261011a">
+  <script src="./welfare-data.js?v=20261004a" defer></script>
+  <script src="./welfare-reviews.js?v=20261011a" defer></script>
+  <script src="./admin.js?v=20261011a" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html" aria-label="回到前台">
+      <img src="./assets/資訊平權ICON.jpg" alt="">
+      <span><strong>福利資料管理</strong><small>福利行動導航・本機管理工具</small></span>
+    </a>
+    <div class="top-actions">
+      <span class="save-state" id="save-state">尚未修改</span>
+      <button class="button secondary" id="open-project" type="button">選取專案資料夾</button>
+      <button class="button primary" id="save-project" type="button">儲存並更新前台</button>
+    </div>
+  </header>
+
+  <div class="local-notice" role="note">
+    <strong>本機原型：</strong>沒有帳號登入、雲端同步或多人權限。請勿放入身分證號、病歷、帳戶等個人資料。
+  </div>
+
+  <main class="admin-shell">
+    <aside class="sidebar">
+      <section class="summary" aria-label="資料摘要">
+        <div><strong id="count-all">0</strong><span>全部</span></div>
+        <div><strong id="count-active">0</strong><span>受理中</span></div>
+        <div><strong id="count-review">0</strong><span>待確認</span></div>
+        <div><strong id="count-closed">0</strong><span>停止</span></div>
+      </section>
+
+      <div class="list-tools">
+        <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜尋福利名稱或單位"></label>
+        <select id="status-filter" aria-label="依受理狀態篩選">
+          <option value="all">所有狀態</option>
+          <option value="active">受理中</option>
+          <option value="verify-window">待確認</option>
+          <option value="closed">停止受理</option>
+        </select>
+        <button class="button add" id="add-benefit" type="button">＋ 新增福利</button>
+      </div>
+
+      <div class="benefit-list" id="benefit-list" role="listbox" aria-label="福利項目"></div>
+    </aside>
+
+    <section class="workspace">
+      <div class="workspace-head">
+        <div>
+          <span class="eyebrow">資料編輯</span>
+          <h1 id="editor-title">選擇一項福利</h1>
+          <p id="editor-subtitle">資料變更只會先留在瀏覽器，按「儲存並更新前台」才會寫入檔案。</p>
+        </div>
+        <div class="editor-actions"><button class="button danger" id="delete-benefit" type="button">刪除</button></div>
+      </div>
+
+      <div class="message error" id="error-message" role="alert" hidden></div>
+      <div class="message success" id="success-message" role="status" hidden></div>
+
+      <section class="review-panel" aria-labelledby="review-title">
+        <div class="review-head">
+          <div>
+            <span class="eyebrow">自動偵測</span>
+            <h2 id="review-title">待人工審核 <span class="review-count" id="pending-review-count">0</span></h2>
+            <p id="monitor-summary">尚未執行來源檢查。自動偵測只會建立提醒，不會直接修改前台福利內容。</p>
+          </div>
+          <button class="button secondary" id="toggle-reviews" type="button" aria-expanded="true">收合審核區</button>
+        </div>
+        <div class="review-list" id="review-list"></div>
+      </section>
+
+      <form id="benefit-form" autocomplete="off">
+        <fieldset>
+          <legend>基本資料</legend>
+          <div class="form-grid two">
+            <label>福利名稱<span class="required">必填</span><input name="title" required></label>
+            <label>資料ID<span class="required">必填</span><input name="id" required pattern="[a-z0-9-]+" placeholder="英文小寫與連字號"></label>
+            <label>分類<select name="category">
+              <option value="income">經濟生活</option><option value="medical">醫療</option><option value="care">照顧</option>
+              <option value="mobility">交通外出</option><option value="emergency">急難救助</option><option value="housing">住宅</option>
+            </select></label>
+            <label>承辦單位<span class="required">必填</span><input name="serviceUnit" required></label>
+            <label>聯絡方式<input name="contact" placeholder="電話、分機或1966"></label>
+            <label>資料整體查核日<input name="catalogCheckedAt" type="date"></label>
+          </div>
+          <label>摘要<span class="required">必填</span><textarea name="summary" rows="3" required></textarea></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>適用對象與申請流程</legend>
+          <div class="form-grid three">
+            <label>適用對象<span class="hint">每行一項</span><textarea name="audience" rows="7"></textarea></label>
+            <label>準備文件<span class="hint">每行一項</span><textarea name="documents" rows="7"></textarea></label>
+            <label>申請步驟<span class="hint">每行一項</span><textarea name="steps" rows="7"></textarea></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>受理狀態</legend>
+          <div class="form-grid three">
+            <label>狀態<select name="availabilityStatus">
+              <option value="active">受理中</option><option value="verify-window">受理期間待確認</option><option value="closed">停止受理</option>
+            </select></label>
+            <label>前台顯示文字<span class="required">必填</span><input name="availabilityLabel" required></label>
+            <label>生效日期<input name="effectiveDate" type="date"></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>官方來源與查核</legend>
+          <div class="form-grid two">
+            <label>來源名稱<span class="required">必填</span><input name="sourceName" required></label>
+            <label>最後查核日<span class="required">必填</span><input name="sourceCheckedAt" type="date" required></label>
+          </div>
+          <label>官方網址<span class="required">須為HTTPS</span><input name="sourceUrl" type="url" required placeholder="https://..."></label>
+          <div class="checks">
+            <label><input name="amountMustBeRechecked" type="checkbox"> 金額需要重新核對</label>
+            <label><input name="annualListMustBeRechecked" type="checkbox"> 年度名單需要重新核對</label>
+            <label><input name="annualProgram" type="checkbox"> 年度型計畫</label>
+            <label><input name="applicationWindowMustBeRechecked" type="checkbox"> 申請期間需要重新核對</label>
+          </div>
+        </fieldset>
+
+        <div class="form-footer">
+          <button class="button primary" type="submit">套用本筆修改</button>
+          <button class="button secondary" id="preview-source" type="button">開啟官方來源</button>
+        </div>
+      </form>
+
+      <section class="data-tools" aria-labelledby="data-tools-title">
+        <div><h2 id="data-tools-title">匯入與備份</h2><p>若瀏覽器不支援直接寫入資料夾，可下載兩個檔案後手動取代原檔。</p></div>
+        <div class="data-actions">
+          <label class="button secondary file-button">匯入JSON<input id="import-json" type="file" accept="application/json,.json"></label>
+          <button class="button secondary" id="download-json" type="button">下載JSON</button>
+          <button class="button secondary" id="download-js" type="button">下載前台JS</button>
+          <button class="button secondary" id="download-reviews" type="button">下載審核紀錄</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="confirm-dialog">
+    <form method="dialog">
+      <h2>刪除這項福利？</h2>
+      <p>刪除後仍需按「儲存並更新前台」才會寫入檔案。</p>
+      <div><button class="button secondary" value="cancel">取消</button><button class="button danger" value="confirm">確定刪除</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

@@ -130,9 +130,9 @@ window.WELFARE_CATALOG = {
         "label": "事件發生後應儘快申請"
       },
       "source": {
-        "name": "桃園市政府－原住民業務急難救助",
-        "url": "https://www.tycg.gov.tw/News_Content.aspx?n=97&s=1554398",
-        "checkedAt": "2026-10-04"
+        "name": "桃園市政府原住民族行政局－115年度原住民急難救助實施計畫",
+        "url": "https://ipb.tycg.gov.tw/News_Content.aspx?n=11012&s=1600352",
+        "checkedAt": "2026-10-11"
       }
     },
     {

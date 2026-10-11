@@ -56,3 +56,33 @@ node tools/build-welfare-data.mjs
 ```
 
 Mac 使用者也可以直接雙擊 `更新福利資料.command`。看到「福利資料已更新到前台」後，重新整理網頁即可。請只編輯 `data/welfare-benefits.json`，不要直接修改自動產生的 `dist/welfare-data.js`。
+
+## 本機福利資料管理後台
+
+用瀏覽器開啟 `dist/admin.html`，即可搜尋、新增、編輯、刪除與驗證福利資料。使用 Chrome 或 Edge 時，點選「選取專案資料夾」並選擇本專案的 `line_bot_ui_work` 資料夾，之後按「儲存並更新前台」，後台會同步更新：
+
+- `data/welfare-benefits.json`：唯一的原始福利資料。
+- `dist/welfare-data.js`：提供前台離線讀取的自動產生檔。
+
+若瀏覽器不支援資料夾寫入，可用後台的「匯入 JSON」、「下載 JSON」及「下載前台 JS」功能，再手動取代同名檔案。這是本機原型，沒有帳號登入、多人權限或雲端資料庫，不應放入任何服務對象的個人資料。
+
+## 官方來源自動偵測與人工審核
+
+系統可以定期讀取每筆福利所設定的官方網址，比對與申請資格、金額、文件、期限及受理狀態有關的文字。偵測到頁面異動時，只會建立「待人工審核」提醒，不會直接改動前台內容，以免網站排版變更或自動判讀錯誤造成福利資訊誤植。
+
+本機操作流程：
+
+1. 雙擊專案根目錄的 `檢查福利更新.command`。第一次執行只會建立官方來源基準；之後偵測到變動才會加入審核清單。
+2. 重新整理 `dist/admin.html`，在「待人工審核」查看新增與消失的官方頁面文字。
+3. 按「開啟官方來源」核對原文；需要修正時按「編輯這筆福利」，修改後先按「套用本筆修改」。
+4. 確認內容正確後按「完成審核」，或在判斷只是排版／無關文字變動時按「忽略此次變動」。
+5. 最後按「儲存並更新前台」，將福利內容與審核紀錄一併寫回專案。
+
+主要檔案：
+
+- `tools/check-welfare-updates.mjs`：擷取官方來源、建立比對結果。
+- `data/welfare-source-snapshots.json`：保存上次官方頁面比對基準。
+- `data/welfare-change-reviews.json`：保存待審核與歷史紀錄。
+- `dist/welfare-reviews.js`：供本機後台讀取的離線審核資料。
+
+`.github/workflows/welfare-source-monitor.yml` 已設定每週一台灣時間上午 9:00 執行。這項 GitHub 自動排程要等相關檔案推上 GitHub 後才會生效；它只會提交偵測結果，不會自動核准或改寫福利內容。若排程無法提交結果，請至 GitHub 專案的 Settings → Actions → General，確認 Workflow permissions 允許 Read and write permissions。

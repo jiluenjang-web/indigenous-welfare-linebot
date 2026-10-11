@@ -70,3 +70,4 @@ body[data-font-size="xlarge"] .card-actions button,body[data-font-size="xlarge"]
 .warning-card{background:rgba(255,250,240,.48)}
 .error-card{background:rgba(255,247,245,.48)}
 .empty-card{background:rgba(251,253,251,.48)}
+.admin-link{display:inline-block;margin-left:1rem;color:#315b45;font-size:.9rem;font-weight:700;text-decoration:none}.admin-link:hover{text-decoration:underline}
