@@ -432,8 +432,9 @@ function applyLanguage(mode, { resetHistory = true } = {}) {
   currentLanguage = languageModes[mode] ? mode : 'zh';
   const translationReady = currentLanguage === 'zh' || Object.keys(translationCatalog[currentLanguage] || {}).length >= 100;
   languageSelect.value = currentLanguage;
+  messages.dataset.language = currentLanguage;
   headerLanguage.textContent = translationReady ? config.header : `${currentLanguage === 'ami' ? '海岸阿美語' : '賽考利克泰雅語'} · 部分示範`;
-  languageHint.hidden = currentLanguage === 'zh';
+  languageHint.hidden = currentLanguage === 'zh' || currentLanguage === 'ami';
   welcomeChineseReference.hidden = currentLanguage === 'zh';
   if (currentLanguage !== 'zh') {
     languageHintText.textContent = translationReady

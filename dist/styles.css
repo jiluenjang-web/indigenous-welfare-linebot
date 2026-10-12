@@ -54,6 +54,13 @@ body[data-font-size="xlarge"] .card-actions button,body[data-font-size="xlarge"]
   background-repeat:no-repeat;
   background-size:cover;
 }
+.messages[data-language="ami"]{
+  background-color:#f4f1e9;
+  background-image:
+    linear-gradient(rgba(255,255,255,.68),rgba(255,255,255,.68)),
+    url("./assets/chat-background-ami.png");
+  background-position:center center;
+}
 
 /* Translucent bubbles keep the artwork visible without reducing readability. */
 .bubble{
