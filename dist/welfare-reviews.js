@@ -1,16 +1,23 @@
 // 此檔案由 tools/check-welfare-updates.mjs 自動產生，請勿直接編輯。
 window.WELFARE_REVIEW_QUEUE = {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-10-11T05:59:56.158Z",
+  "generatedAt": "2026-10-12T06:52:01.206Z",
   "pending": [],
   "history": [],
   "lastRun": {
-    "startedAt": "2026-10-11T05:59:50.379Z",
-    "finishedAt": "2026-10-11T05:59:56.158Z",
-    "checked": 8,
+    "startedAt": "2026-10-12T06:51:40.559Z",
+    "finishedAt": "2026-10-12T06:52:01.206Z",
+    "checked": 7,
     "changed": 0,
     "initialized": 0,
-    "failed": 0,
-    "errors": []
+    "failed": 1,
+    "errors": [
+      {
+        "benefitId": "taoyuan-long-term-care",
+        "title": "桃園市長期照顧服務",
+        "url": "https://care.tycg.gov.tw/cp.aspx?Create=1&n=371",
+        "message": "fetch failed"
+      }
+    ]
   }
 };
