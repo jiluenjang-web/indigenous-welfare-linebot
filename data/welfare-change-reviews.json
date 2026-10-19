@@ -1,22 +1,15 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-10-12T06:52:01.206Z",
+  "generatedAt": "2026-10-19T05:36:15.148Z",
   "pending": [],
   "history": [],
   "lastRun": {
-    "startedAt": "2026-10-12T06:51:40.559Z",
-    "finishedAt": "2026-10-12T06:52:01.206Z",
-    "checked": 7,
+    "startedAt": "2026-10-19T05:35:56.511Z",
+    "finishedAt": "2026-10-19T05:36:15.148Z",
+    "checked": 8,
     "changed": 0,
     "initialized": 0,
-    "failed": 1,
-    "errors": [
-      {
-        "benefitId": "taoyuan-long-term-care",
-        "title": "桃園市長期照顧服務",
-        "url": "https://care.tycg.gov.tw/cp.aspx?Create=1&n=371",
-        "message": "fetch failed"
-      }
-    ]
+    "failed": 0,
+    "errors": []
   }
 }
