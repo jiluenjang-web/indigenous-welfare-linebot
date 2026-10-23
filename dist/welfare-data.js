@@ -1,9 +1,128 @@
 // 此檔案由 tools/build-welfare-data.mjs 自動產生，請勿直接編輯。
 window.WELFARE_CATALOG = {
-  "schemaVersion": "1.0",
+  "schemaVersion": "1.1",
   "scope": "桃園市原住民長者優先資訊",
   "checkedAt": "2026-10-04",
   "notice": "本資料僅供初步導引，不代表資格核定。金額、期間及文件要求以主管機關最新公告與承辦人員回覆為準。",
+  "regionalContacts": [
+    {
+      "id": "taoyuan",
+      "region": "桃園區",
+      "unit": "桃園區公所跨區服務單一窗口",
+      "phone": "03-3348058",
+      "extension": "1226",
+      "url": "https://e-services.tycg.gov.tw/TycgOnline/TycgCrossdistrict/Cross.action?func=contactdetail",
+      "checkedAt": "2026-10-24"
+    },
+    {
+      "id": "zhongli",
+      "region": "中壢區",
+      "unit": "中壢區公所跨區服務單一窗口",
+      "phone": "03-4271801",
+      "extension": "1705",
+      "url": "https://e-services.tycg.gov.tw/TycgOnline/TycgCrossdistrict/Cross.action?func=contactdetail",
+      "checkedAt": "2026-10-24"
+    },
+    {
+      "id": "bade",
+      "region": "八德區",
+      "unit": "八德區公所跨區服務單一窗口",
+      "phone": "03-3683155",
+      "extension": "197",
+      "url": "https://e-services.tycg.gov.tw/TycgOnline/TycgCrossdistrict/Cross.action?func=contactdetail",
+      "checkedAt": "2026-10-24"
+    },
+    {
+      "id": "pingzhen",
+      "region": "平鎮區",
+      "unit": "平鎮區公所跨區服務單一窗口",
+      "phone": "03-4572105",
+      "extension": "2020",
+      "url": "https://e-services.tycg.gov.tw/TycgOnline/TycgCrossdistrict/Cross.action?func=contactdetail",
+      "checkedAt": "2026-10-24"
+    },
+    {
+      "id": "daxi",
+      "region": "大溪區",
+      "unit": "大溪區公所跨區服務單一窗口",
+      "phone": "03-3882201",
+      "extension": "164",
+      "url": "https://e-services.tycg.gov.tw/TycgOnline/TycgCrossdistrict/Cross.action?func=contactdetail",
+      "checkedAt": "2026-10-24"
+    },
+    {
+      "id": "yangmei",
+      "region": "楊梅區",
+      "unit": "楊梅區公所跨區服務單一窗口",
+      "phone": "03-4783683",
+      "extension": "201",
+      "url": "https://e-services.tycg.gov.tw/TycgOnline/TycgCrossdistrict/Cross.action?func=contactdetail",
+      "checkedAt": "2026-10-24"
+    },
+    {
+      "id": "guishan",
+      "region": "龜山區",
+      "unit": "龜山區公所跨區服務單一窗口",
+      "phone": "03-3203711",
+      "extension": "217",
+      "url": "https://e-services.tycg.gov.tw/TycgOnline/TycgCrossdistrict/Cross.action?func=contactdetail",
+      "checkedAt": "2026-10-24"
+    },
+    {
+      "id": "luzhu",
+      "region": "蘆竹區",
+      "unit": "蘆竹區公所跨區服務單一窗口",
+      "phone": "03-3520000",
+      "extension": "115",
+      "url": "https://e-services.tycg.gov.tw/TycgOnline/TycgCrossdistrict/Cross.action?func=contactdetail",
+      "checkedAt": "2026-10-24"
+    },
+    {
+      "id": "dayuan",
+      "region": "大園區",
+      "unit": "大園區公所跨區服務單一窗口",
+      "phone": "03-3867703",
+      "extension": "102",
+      "url": "https://e-services.tycg.gov.tw/TycgOnline/TycgCrossdistrict/Cross.action?func=contactdetail",
+      "checkedAt": "2026-10-24"
+    },
+    {
+      "id": "guanyin",
+      "region": "觀音區",
+      "unit": "觀音區公所跨區服務單一窗口",
+      "phone": "03-4732680",
+      "extension": "",
+      "url": "https://e-services.tycg.gov.tw/TycgOnline/TycgCrossdistrict/Cross.action?func=contactdetail",
+      "checkedAt": "2026-10-24"
+    },
+    {
+      "id": "xinwu",
+      "region": "新屋區",
+      "unit": "新屋區公所跨區服務單一窗口",
+      "phone": "03-4772111",
+      "extension": "385",
+      "url": "https://e-services.tycg.gov.tw/TycgOnline/TycgCrossdistrict/Cross.action?func=contactdetail",
+      "checkedAt": "2026-10-24"
+    },
+    {
+      "id": "longtan",
+      "region": "龍潭區",
+      "unit": "龍潭區公所跨區服務單一窗口",
+      "phone": "03-4793070",
+      "extension": "2313",
+      "url": "https://e-services.tycg.gov.tw/TycgOnline/TycgCrossdistrict/Cross.action?func=contactdetail",
+      "checkedAt": "2026-10-24"
+    },
+    {
+      "id": "fuxing",
+      "region": "復興區",
+      "unit": "復興區公所跨區服務單一窗口",
+      "phone": "03-3821500",
+      "extension": "115",
+      "url": "https://e-services.tycg.gov.tw/TycgOnline/TycgCrossdistrict/Cross.action?func=contactdetail",
+      "checkedAt": "2026-10-24"
+    }
+  ],
   "benefits": [
     {
       "id": "taoyuan-indigenous-senior-card",
@@ -26,6 +145,18 @@ window.WELFARE_CATALOG = {
         "現場審核與發卡"
       ],
       "serviceUnit": "桃園市各區公所",
+      "referral": {
+        "strategy": "direct-and-district",
+        "department": "市民卡／社會課服務窗口",
+        "purpose": "確認原民敬老卡資格、文件、跨區申辦與發卡進度",
+        "primary": {
+          "unit": "桃園市政府原住民族行政局原民福利科",
+          "phone": "03-3322101",
+          "extension": "6686-6687",
+          "purpose": "確認原住民身分相關敬老卡疑問",
+          "url": "https://sab.tycg.gov.tw/News_Content.aspx?n=7372&s=684795&sms=11905"
+        }
+      },
       "availability": {
         "status": "active",
         "label": "持續受理"
@@ -57,6 +188,18 @@ window.WELFARE_CATALOG = {
         "郵寄或送至勞保局各地辦事處"
       ],
       "serviceUnit": "勞動部勞工保險局",
+      "referral": {
+        "strategy": "direct",
+        "department": "國民年金組",
+        "purpose": "確認原住民給付資格、排除條件、申請進度與給付金額",
+        "primary": {
+          "unit": "勞動部勞工保險局國民年金組",
+          "phone": "03-3350003",
+          "extension": "",
+          "purpose": "洽詢國民年金原住民給付",
+          "url": "https://www.bli.gov.tw/0014344.htm"
+        }
+      },
       "availability": {
         "status": "active",
         "label": "持續受理"
@@ -91,6 +234,11 @@ window.WELFARE_CATALOG = {
         "向戶籍地區公所社會課申請"
       ],
       "serviceUnit": "戶籍所在地區公所社會課",
+      "referral": {
+        "strategy": "district",
+        "department": "社會課",
+        "purpose": "確認中低收入老人生活津貼資格、應備文件與送件窗口"
+      },
       "availability": {
         "status": "active",
         "label": "持續受理"
@@ -125,6 +273,18 @@ window.WELFARE_CATALOG = {
       ],
       "serviceUnit": "桃園市原住民族行政局原民福利科／各區公所人文課",
       "contact": "03-3322101 分機6686-6687",
+      "referral": {
+        "strategy": "direct-and-district",
+        "department": "人文課／原住民服務窗口",
+        "purpose": "確認急難類型、三個月申請期限、證明文件與送件方式",
+        "primary": {
+          "unit": "桃園市政府原住民族行政局原民福利科",
+          "phone": "03-3322101",
+          "extension": "6686-6687",
+          "purpose": "急難救助案件與期限諮詢",
+          "url": "https://ipb.tycg.gov.tw/News_Content.aspx?n=11012&s=1600352"
+        }
+      },
       "availability": {
         "status": "active",
         "label": "事件發生後應儘快申請"
@@ -154,6 +314,18 @@ window.WELFARE_CATALOG = {
       ],
       "serviceUnit": "桃園市原住民族文化健康站",
       "contact": "原民福利科 03-3322101 分機6686-6687",
+      "referral": {
+        "strategy": "direct",
+        "department": "原民福利科",
+        "purpose": "查詢最近文化健康站、收案條件與服務量能",
+        "primary": {
+          "unit": "桃園市政府原住民族行政局原民福利科",
+          "phone": "03-3322101",
+          "extension": "6686-6687",
+          "purpose": "文化健康站名單與轉介",
+          "url": "https://opendata.tycg.gov.tw/datalist/7d7bcba6-5747-4734-a288-6bc9e43f1767"
+        }
+      },
       "availability": {
         "status": "active",
         "label": "依各站服務量能受理"
@@ -186,6 +358,18 @@ window.WELFARE_CATALOG = {
       ],
       "serviceUnit": "桃園市長期照顧管理中心",
       "contact": "1966",
+      "referral": {
+        "strategy": "direct",
+        "department": "長期照顧管理中心",
+        "purpose": "提出長照申請、安排照顧需求評估與服務轉介",
+        "primary": {
+          "unit": "長照服務專線",
+          "phone": "1966",
+          "extension": "",
+          "purpose": "長照申請與服務諮詢",
+          "url": "https://care.tycg.gov.tw/cp.aspx?Create=1&n=371"
+        }
+      },
       "availability": {
         "status": "active",
         "label": "持續受理"
@@ -216,6 +400,18 @@ window.WELFARE_CATALOG = {
       ],
       "serviceUnit": "桃園市原住民族行政局原民福利科",
       "contact": "03-3322101 分機6686",
+      "referral": {
+        "strategy": "direct",
+        "department": "原民福利科",
+        "purpose": "確認本年度停止受理狀態及下一年度計畫",
+        "primary": {
+          "unit": "桃園市政府原住民族行政局原民福利科",
+          "phone": "03-3322101",
+          "extension": "6686",
+          "purpose": "假牙補助年度計畫諮詢",
+          "url": "https://ipb.tycg.gov.tw/News_Content.aspx?n=10988&s=1718115&sms=14505"
+        }
+      },
       "availability": {
         "status": "closed",
         "label": "115年度已停止受理",
@@ -253,6 +449,18 @@ window.WELFARE_CATALOG = {
       ],
       "serviceUnit": "戶籍所在地區公所",
       "contact": "原民福利科 03-3322101 分機6686-6687",
+      "referral": {
+        "strategy": "direct-and-district",
+        "department": "人文課／原住民服務窗口",
+        "purpose": "確認年度受理期間、所得財產條件、住宅文件與送件窗口",
+        "primary": {
+          "unit": "桃園市政府原住民族行政局原民福利科",
+          "phone": "03-3322101",
+          "extension": "6686-6687",
+          "purpose": "建購及修繕住宅補助諮詢",
+          "url": "https://ipb.tycg.gov.tw/News_Content.aspx?n=11006&s=1578621"
+        }
+      },
       "availability": {
         "status": "verify-window",
         "label": "需確認當年度受理期間"

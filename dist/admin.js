@@ -1,8 +1,20 @@
-const requiredBenefitFields = ['id', 'title', 'category', 'audience', 'summary', 'documents', 'steps', 'serviceUnit', 'availability', 'source'];
+const requiredBenefitFields = ['id', 'title', 'category', 'audience', 'summary', 'documents', 'steps', 'serviceUnit', 'availability', 'source', 'referral'];
 const statusLabels = { active: '受理中', 'verify-window': '待確認', closed: '停止受理' };
 const categoryLabels = { income: '經濟生活', medical: '醫療', care: '照顧', mobility: '交通外出', emergency: '急難救助', housing: '住宅' };
 
-let catalog = structuredClone(window.WELFARE_CATALOG || { schemaVersion: '1.0', scope: '桃園市原住民長者優先資訊', checkedAt: '', notice: '', benefits: [] });
+function normalizeCatalog(value) {
+  const normalized = value && typeof value === 'object' ? value : {};
+  return {
+    schemaVersion: normalized.schemaVersion || '1.1',
+    scope: normalized.scope || '桃園市原住民長者優先資訊',
+    checkedAt: normalized.checkedAt || '',
+    notice: normalized.notice || '',
+    regionalContacts: Array.isArray(normalized.regionalContacts) ? normalized.regionalContacts : [],
+    benefits: Array.isArray(normalized.benefits) ? normalized.benefits : []
+  };
+}
+
+let catalog = normalizeCatalog(structuredClone(window.WELFARE_CATALOG || {}));
 let reviewQueue = structuredClone(window.WELFARE_REVIEW_QUEUE || { schemaVersion: '1.0', generatedAt: null, pending: [], history: [], lastRun: null });
 let selectedId = catalog.benefits[0]?.id || null;
 let projectDirectoryHandle = null;
@@ -49,6 +61,22 @@ function showMessage(type, text) {
 
 function validateCatalog(data = catalog) {
   const errors = [];
+  if (!Array.isArray(data.regionalContacts) || !data.regionalContacts.length) errors.push('至少需要一筆行政區服務窗口。');
+  const regionIds = new Set();
+  const regionNames = new Set();
+  (data.regionalContacts || []).forEach((contact, index) => {
+    const label = contact.region || `第${index + 1}筆行政區窗口`;
+    if (!/^[a-z0-9-]+$/.test(contact.id || '')) errors.push(`${label}的ID只能使用英文小寫、數字與連字號。`);
+    if (regionIds.has(contact.id)) errors.push(`行政區ID重複：${contact.id}`);
+    if (regionNames.has(contact.region)) errors.push(`行政區名稱重複：${contact.region}`);
+    regionIds.add(contact.id);
+    regionNames.add(contact.region);
+    if (!contact.region?.trim()) errors.push(`第${index + 1}筆行政區窗口缺少區名。`);
+    if (!contact.unit?.trim()) errors.push(`${label}缺少單位名稱。`);
+    if (!contact.phone?.trim()) errors.push(`${label}缺少電話。`);
+    if (!contact.checkedAt) errors.push(`${label}缺少查核日。`);
+    if (contact.url && !contact.url.startsWith('https://')) errors.push(`${label}的官方網址必須以https://開頭。`);
+  });
   if (!Array.isArray(data.benefits) || !data.benefits.length) errors.push('至少需要一筆福利資料。');
   const ids = new Set();
   (data.benefits || []).forEach((benefit, index) => {
@@ -63,6 +91,15 @@ function validateCatalog(data = catalog) {
     if (!benefit.source?.name?.trim()) errors.push(`${benefit.title || `第${index + 1}筆`}缺少來源名稱。`);
     if (!benefit.source?.checkedAt) errors.push(`${benefit.title || `第${index + 1}筆`}缺少查核日。`);
     if (!benefit.source?.url?.startsWith('https://')) errors.push(`${benefit.title || `第${index + 1}筆`}的官方網址必須以https://開頭。`);
+    const referral = benefit.referral || {};
+    if (!['district', 'direct', 'direct-and-district'].includes(referral.strategy)) errors.push(`${benefit.title || `第${index + 1}筆`}缺少有效的轉介方式。`);
+    if (!referral.purpose?.trim()) errors.push(`${benefit.title || `第${index + 1}筆`}缺少轉介目的。`);
+    if (referral.strategy?.includes('district') && !referral.department?.trim()) errors.push(`${benefit.title || `第${index + 1}筆`}缺少區公所承辦窗口。`);
+    if (referral.strategy?.includes('direct')) {
+      if (!referral.primary?.unit?.trim()) errors.push(`${benefit.title || `第${index + 1}筆`}缺少主責單位名稱。`);
+      if (!referral.primary?.phone?.trim()) errors.push(`${benefit.title || `第${index + 1}筆`}缺少主責單位電話。`);
+      if (referral.primary?.url && !referral.primary.url.startsWith('https://')) errors.push(`${benefit.title || `第${index + 1}筆`}的主責單位網址必須以https://開頭。`);
+    }
   });
   return errors;
 }
@@ -174,6 +211,44 @@ function finishReview(id, status) {
   }
 }
 
+function createRegionalContactRow(contact = {}) {
+  const row = document.createElement('article');
+  row.className = 'regional-contact-row';
+  row.innerHTML = `
+    <div class="regional-contact-title"><strong></strong><button class="remove-region" type="button" aria-label="刪除此行政區窗口">刪除</button></div>
+    <div class="form-grid three">
+      <label>行政區<input data-field="region" required></label>
+      <label>資料ID<input data-field="id" required pattern="[a-z0-9-]+"></label>
+      <label>單位名稱<input data-field="unit" required></label>
+      <label>電話<input data-field="phone" inputmode="tel" required></label>
+      <label>分機<input data-field="extension" inputmode="numeric"></label>
+      <label>查核日<input data-field="checkedAt" type="date" required></label>
+    </div>
+    <label>官方窗口網址<input data-field="url" type="url" placeholder="https://..."></label>`;
+  const values = {
+    id: contact.id || '', region: contact.region || '', unit: contact.unit || '', phone: contact.phone || '',
+    extension: contact.extension || '', url: contact.url || '', checkedAt: contact.checkedAt || ''
+  };
+  Object.entries(values).forEach(([name, value]) => { row.querySelector(`[data-field="${name}"]`).value = value; });
+  row.querySelector('strong').textContent = contact.region || '新行政區窗口';
+  return row;
+}
+
+function renderRegionalContacts() {
+  const target = $('#regional-contact-list');
+  target.replaceChildren(...catalog.regionalContacts.map(createRegionalContactRow));
+}
+
+function collectRegionalContacts() {
+  catalog.regionalContacts = [...$('#regional-contact-list').querySelectorAll('.regional-contact-row')].map(row => {
+    const value = name => row.querySelector(`[data-field="${name}"]`).value.trim();
+    return {
+      id: value('id'), region: value('region'), unit: value('unit'), phone: value('phone'),
+      extension: value('extension'), url: value('url'), checkedAt: value('checkedAt')
+    };
+  });
+}
+
 function countAndRenderList() {
   const benefits = catalog.benefits || [];
   $('#count-all').textContent = benefits.length;
@@ -227,7 +302,6 @@ function fillForm(item) {
   fields.id.value = item.id || '';
   fields.category.value = item.category || 'income';
   fields.serviceUnit.value = item.serviceUnit || '';
-  fields.contact.value = item.contact || '';
   fields.catalogCheckedAt.value = catalog.checkedAt || '';
   fields.summary.value = item.summary || '';
   fields.audience.value = (item.audience || []).join('\n');
@@ -239,6 +313,14 @@ function fillForm(item) {
   fields.sourceName.value = item.source?.name || '';
   fields.sourceCheckedAt.value = item.source?.checkedAt || '';
   fields.sourceUrl.value = item.source?.url || '';
+  fields.referralStrategy.value = item.referral?.strategy || 'district';
+  fields.referralDepartment.value = item.referral?.department || '';
+  fields.referralPurpose.value = item.referral?.purpose || '';
+  fields.referralPrimaryUnit.value = item.referral?.primary?.unit || '';
+  fields.referralPrimaryPhone.value = item.referral?.primary?.phone || '';
+  fields.referralPrimaryExtension.value = item.referral?.primary?.extension || '';
+  fields.referralPrimaryPurpose.value = item.referral?.primary?.purpose || '';
+  fields.referralPrimaryUrl.value = item.referral?.primary?.url || '';
   ['amountMustBeRechecked', 'annualListMustBeRechecked', 'annualProgram', 'applicationWindowMustBeRechecked'].forEach(name => {
     fields[name].checked = Boolean(item.source?.[name]);
   });
@@ -261,11 +343,22 @@ function readForm() {
   });
   const availability = { status: fields.availabilityStatus.value, label: fields.availabilityLabel.value.trim() };
   if (fields.effectiveDate.value) availability.effectiveDate = fields.effectiveDate.value;
+  const strategy = fields.referralStrategy.value;
+  const referral = {
+    strategy,
+    department: fields.referralDepartment.value.trim(),
+    purpose: fields.referralPurpose.value.trim()
+  };
+  const primary = {
+    unit: fields.referralPrimaryUnit.value.trim(), phone: fields.referralPrimaryPhone.value.trim(),
+    extension: fields.referralPrimaryExtension.value.trim(), purpose: fields.referralPrimaryPurpose.value.trim(),
+    url: fields.referralPrimaryUrl.value.trim()
+  };
+  if (Object.values(primary).some(Boolean)) referral.primary = primary;
   return {
     id: fields.id.value.trim(), title: fields.title.value.trim(), category: fields.category.value,
     audience: lines(fields.audience.value), summary: fields.summary.value.trim(), documents: lines(fields.documents.value),
-    steps: lines(fields.steps.value), serviceUnit: fields.serviceUnit.value.trim(),
-    ...(fields.contact.value.trim() ? { contact: fields.contact.value.trim() } : {}), availability, source
+    steps: lines(fields.steps.value), serviceUnit: fields.serviceUnit.value.trim(), referral, availability, source
   };
 }
 
@@ -343,10 +436,11 @@ async function chooseProject() {
     const errors = validateCatalog(imported);
     if (errors.length) throw new Error(errors.slice(0, 4).join(' '));
     projectDirectoryHandle = directory;
-    catalog = imported;
+    catalog = normalizeCatalog(imported);
     reviewQueue = normalizeReviewQueue(importedReviews);
     selectedId = catalog.benefits[0]?.id || null;
     setDirty(false);
+    renderRegionalContacts();
     selectBenefit(selectedId);
     renderReviews();
     showMessage('success', `已載入「${directory.name}」的福利資料，可直接儲存並同步前台。`);
@@ -359,6 +453,7 @@ async function chooseProject() {
 
 async function saveProject() {
   if (getSelected() && !applyCurrentForm(false)) return;
+  collectRegionalContacts();
   const errors = validateCatalog();
   if (errors.length) { showMessage('error', errors.slice(0, 5).join(' ')); return; }
   if (!projectDirectoryHandle) {
@@ -400,7 +495,9 @@ function addBenefit() {
   const suffix = Date.now().toString().slice(-6);
   const item = {
     id: `new-benefit-${suffix}`, title: '新福利項目', category: 'income', audience: [], summary: '請填寫福利摘要。',
-    documents: [], steps: [], serviceUnit: '請填寫承辦單位', availability: { status: 'verify-window', label: '受理期間待確認' },
+    documents: [], steps: [], serviceUnit: '請填寫承辦單位',
+    referral: { strategy: 'direct', department: '', purpose: '請填寫轉介目的', primary: { unit: '桃園1999市民諮詢服務', phone: '1999', extension: '', purpose: '協助轉接主管單位', url: 'https://e-services.tycg.gov.tw/' } },
+    availability: { status: 'verify-window', label: '受理期間待確認' },
     source: { name: '請填寫官方來源', url: 'https://', checkedAt: new Date().toISOString().slice(0, 10) }
   };
   catalog.benefits.unshift(item);
@@ -430,12 +527,14 @@ $('#confirm-dialog').addEventListener('close', event => {
 });
 $('#download-json').addEventListener('click', () => {
   if (getSelected() && !applyCurrentForm(false)) return;
+  collectRegionalContacts();
   const errors = validateCatalog();
   if (errors.length) { showMessage('error', errors.slice(0, 5).join(' ')); return; }
   download('welfare-benefits.json', serializeJson(), 'application/json');
 });
 $('#download-js').addEventListener('click', () => {
   if (getSelected() && !applyCurrentForm(false)) return;
+  collectRegionalContacts();
   const errors = validateCatalog();
   if (errors.length) { showMessage('error', errors.slice(0, 5).join(' ')); return; }
   download('welfare-data.js', serializeJs(), 'text/javascript');
@@ -448,6 +547,29 @@ $('#toggle-reviews').addEventListener('click', event => {
   $('#review-list').hidden = hidden;
   event.currentTarget.setAttribute('aria-expanded', String(!hidden));
   event.currentTarget.textContent = hidden ? '展開審核區' : '收合審核區';
+});
+$('#toggle-directory').addEventListener('click', event => {
+  const editor = $('#regional-contact-editor');
+  editor.hidden = !editor.hidden;
+  event.currentTarget.setAttribute('aria-expanded', String(!editor.hidden));
+  event.currentTarget.textContent = editor.hidden ? '展開窗口資料' : '收合窗口資料';
+});
+$('#add-regional-contact').addEventListener('click', () => {
+  const row = createRegionalContactRow({ checkedAt: new Date().toISOString().slice(0, 10) });
+  $('#regional-contact-list').append(row);
+  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setDirty(true);
+});
+$('#regional-contact-list').addEventListener('input', event => {
+  const row = event.target.closest('.regional-contact-row');
+  if (row && event.target.dataset.field === 'region') row.querySelector('strong').textContent = event.target.value || '新行政區窗口';
+  setDirty(true);
+});
+$('#regional-contact-list').addEventListener('click', event => {
+  const button = event.target.closest('.remove-region');
+  if (!button) return;
+  button.closest('.regional-contact-row').remove();
+  setDirty(true);
 });
 $('#review-list').addEventListener('click', event => {
   const button = event.target.closest('button[data-action]');
@@ -470,9 +592,10 @@ $('#import-json').addEventListener('change', async event => {
     const imported = JSON.parse(await file.text());
     const errors = validateCatalog(imported);
     if (errors.length) throw new Error(errors.slice(0, 5).join(' '));
-    catalog = imported;
+    catalog = normalizeCatalog(imported);
     selectedId = catalog.benefits[0]?.id || null;
     setDirty(true);
+    renderRegionalContacts();
     selectBenefit(selectedId);
     showMessage('success', `已匯入${catalog.benefits.length}筆資料，尚未寫入專案。`);
   } catch (error) {
@@ -491,3 +614,4 @@ window.addEventListener('beforeunload', event => {
 countAndRenderList();
 fillForm(getSelected());
 renderReviews();
+renderRegionalContacts();

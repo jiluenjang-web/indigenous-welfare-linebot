@@ -89,6 +89,8 @@ const languageModes = {
 };
 
 const welfareCatalog = window.WELFARE_CATALOG || { benefits: [], notice: '', checkedAt: '' };
+const regionalContacts = Array.isArray(welfareCatalog.regionalContacts) ? welfareCatalog.regionalContacts : [];
+const regionalContactMap = Object.fromEntries(regionalContacts.map(contact => [contact.id, contact]));
 const SENIOR_CARD_ID = 'taoyuan-indigenous-senior-card';
 const categoryConfiguration = {
   income: { flow: 'living', label: '經濟生活' },
@@ -345,8 +347,10 @@ function addCard({ tag, title, description, bullets = [], meta = [], actions = [
       const control = href ? document.createElement('a') : document.createElement('button');
       if (href) {
         control.href = href;
-        control.target = '_blank';
-        control.rel = 'noopener noreferrer';
+        if (!href.startsWith('tel:')) {
+          control.target = '_blank';
+          control.rel = 'noopener noreferrer';
+        }
       } else {
         control.type = 'button';
         control.dataset.action = action;
@@ -559,21 +563,93 @@ function startPreparation(id) {
   setQuickActions([{ label: '重新選擇福利', action: 'prepare' }, { label: '找真人', action: 'human' }]);
 }
 
-function showHumanResult(region) {
-  const reasonText = helpReason || '確認福利與申請方式';
+function dialHref(phone = '') {
+  return `tel:${phone.replace(/[^0-9+]/g, '')}`;
+}
+
+function primaryContactLine(item) {
+  const contact = item?.referral?.primary;
+  if (!contact?.phone) return item?.contact || '';
+  return `${contact.unit} ${contact.phone}${contact.extension ? ` 分機${contact.extension}` : ''}`;
+}
+
+function showHumanProblemStep() {
+  const hasDistrictStep = welfareData[selectedBenefit]?.referral?.strategy?.includes('district');
   addCard({
-    tag: '真人協助', title: `${region}｜建議聯絡方式`,
-    description: `您要詢問：${reasonText}。可先聯絡戶籍地區公所社會課，或透過桃園 1999 市民諮詢服務轉接主管單位。`,
-    bullets: ['先說明「想申請的福利」或「目前遇到的困難」', '詢問最新資格、文件與受理地點', '先電話確認再前往，減少白跑一趟'],
-    actions: [
-      { label: '撥打桃園 1999', href: 'tel:1999', primary: true },
-      { label: '查官方福利資料 ↗', href: 'https://data.gov.tw/dataset/26032' },
-      { label: '回主選單', action: 'menu' }
-    ],
-    progress: { current: 3, total: 3, label: '真人協助' }
+    tag: '問題分類', title: '您遇到哪一種困難？',
+    description: `目前要詢問：${welfareData[selectedBenefit]?.title || '尚未指定福利'}。系統會依福利與行政區找出正確窗口。`,
+    actions: [{ label: '看不懂資格', action: 'help:看不懂資格' }, { label: '不知道文件帶對沒', action: 'help:文件確認' }, { label: '不知道去哪裡辦', action: 'help:找承辦窗口' }],
+    progress: { current: 2, total: hasDistrictStep ? 4 : 3, label: '精準真人轉介' }
   });
-  addBubble('聯絡前可先把問題與手邊文件寫下來。不需在本系統輸入身分證號、病歷或存簿資料。');
-  setQuickActions(mainActions);
+  setQuickActions([{ label: '看不懂資格', action: 'help:看不懂資格' }, { label: '文件確認', action: 'help:文件確認' }]);
+}
+
+function showRegionStep() {
+  addCard({
+    tag: '選擇行政區', title: '您的戶籍在桃園哪一區？',
+    description: '只用來顯示該區公所電話與分機，不會儲存地址或個人資料。',
+    actions: [
+      ...regionalContacts.map(contact => ({ label: contact.region, action: `region:${contact.id}` })),
+      { label: '不確定行政區', action: 'region:unknown' }
+    ],
+    progress: { current: 3, total: 4, label: '精準真人轉介' }
+  });
+}
+
+function showFallbackContact() {
+  addCard({
+    tag: '備援轉接', title: '無法確認窗口時，可請 1999 協助轉接',
+    description: `請說：「我要詢問${welfareData[selectedBenefit]?.title || '原住民長者福利'}，問題是${helpReason || '資格與申請方式'}。」`,
+    meta: ['桃園市境內：1999', '外縣市或部分電信：03-2189000'],
+    actions: [{ label: '撥打 1999', href: 'tel:1999' }, { label: '撥打 03-2189000', href: 'tel:032189000' }],
+    tone: 'warning-card'
+  });
+}
+
+function showHumanResult(regionId = '') {
+  const item = welfareData[selectedBenefit];
+  const referral = item?.referral || {};
+  const district = regionalContactMap[regionId];
+  const hasDistrict = referral.strategy?.includes('district') && district;
+  const hasDirect = referral.strategy?.includes('direct') && referral.primary?.phone;
+  const reasonText = helpReason || '確認福利與申請方式';
+
+  if (hasDistrict) {
+    addCard({
+      tag: '第一聯絡窗口', title: `${district.region}｜${district.unit}`,
+      description: `請轉接「${referral.department}」，詢問：${referral.purpose || reasonText}。`,
+      bullets: ['先說福利名稱與問題，不必報身分證號', district.extension ? `接通後輸入分機 ${district.extension}` : '接通後請總機轉接承辦窗口', '前往前先電話確認，避免文件不足或受理期間異動'],
+      meta: [`電話：${district.phone}`, ...(district.extension ? [`分機：${district.extension}`] : []), `窗口查核日：${district.checkedAt}`],
+      actions: [
+        { label: `撥打 ${district.phone}`, href: dialHref(district.phone), primary: true },
+        ...(district.url ? [{ label: '查看官方窗口 ↗', href: district.url }] : [])
+      ],
+      progress: { current: 4, total: 4, label: '精準真人轉介' }
+    });
+  }
+
+  if (hasDirect) {
+    const primary = referral.primary;
+    addCard({
+      tag: hasDistrict ? '主管機關備援' : '主責服務窗口', title: primary.unit,
+      description: primary.purpose || referral.purpose || `詢問${reasonText}`,
+      bullets: [primary.extension ? `接通後輸入分機 ${primary.extension}` : '直接撥打服務專線', `可說明：「我要詢問${item.title}，問題是${reasonText}。」`],
+      meta: [`電話：${primary.phone}`, ...(primary.extension ? [`分機：${primary.extension}`] : [])],
+      actions: [
+        { label: `撥打 ${primary.phone}`, href: dialHref(primary.phone), primary: !hasDistrict },
+        ...(primary.url ? [{ label: '查看主責單位說明 ↗', href: primary.url }] : [])
+      ],
+      progress: hasDistrict ? null : { current: 3, total: 3, label: '精準真人轉介' }
+    });
+  }
+
+  if (!hasDistrict && !hasDirect) showFallbackContact();
+  else addBubble('以上電話依官方資料建立。聯絡時請勿在本系統輸入身分證號、病歷或存簿資料；若窗口異動，可改撥 1999 協助轉接。');
+  setQuickActions([
+    { label: '改選福利', action: 'human-change-benefit' },
+    ...(referral.strategy?.includes('district') ? [{ label: '改選行政區', action: 'human-change-region' }] : []),
+    { label: '回主選單', action: 'menu' }
+  ]);
 }
 
 function showNoResults(query = '') {
@@ -610,7 +686,7 @@ function buildSummaryText(item) {
     `已準備文件：${prepared}`,
     `待確認或待準備：${missing}`,
     `辦理單位：${item.serviceUnit}`,
-    ...(item.contact ? [`聯絡方式：${item.contact}`] : []),
+    ...(primaryContactLine(item) ? [`主責聯絡：${primaryContactLine(item)}`] : []),
     `下一步：先聯絡辦理單位，確認最新文件、受理時間與資格。`,
     `資料來源：${item.sourceName}`,
     `查核日：${item.verified}`,
@@ -669,7 +745,8 @@ function choose(action) {
     care: '就醫照顧', mobility: '交通外出', menu: '回主選單', 'show-checklist': '整理文件',
     'apply-location': '查看辦理方式', summary: '完成並查看申請摘要', 'qualify:resident': '是，設籍桃園', 'qualify:resident-no': '否／不確定',
     'qualify:age': '已年滿 55 歲', 'qualify:age-no': '未滿 55 歲／不確定',
-    'qualify:indigenous': '戶籍記載為原住民', 'qualify:indigenous-no': '否／不確定'
+    'qualify:indigenous': '戶籍記載為原住民', 'qualify:indigenous-no': '否／不確定',
+    'human-change-benefit': '改選福利', 'human-change-region': '改選行政區', 'human-fallback': '不確定是哪一項'
   };
   if (action === 'copy-summary') {
     copyApplicationSummary();
@@ -681,10 +758,10 @@ function choose(action) {
     return;
   }
   pushHistory();
-  const dataId = action.includes(':') ? action.split(':')[1] : '';
+  const dataId = action.includes(':') ? action.slice(action.indexOf(':') + 1) : '';
   const label = action.startsWith('source-help:')
     ? '連結無法開啟'
-    : names[action] || ((action.startsWith('detail:') || action.startsWith('prepare:')) ? welfareData[dataId]?.title : dataId || '查看資訊');
+    : names[action] || ((action.startsWith('detail:') || action.startsWith('prepare:') || action.startsWith('human-benefit:')) ? welfareData[dataId]?.title : regionalContactMap[dataId]?.region || dataId || '查看資訊');
   addBubble(label || '查看資訊', 'user');
 
   if (action === 'benefits') {
@@ -738,12 +815,13 @@ function choose(action) {
   }
   if (action === 'apply-location') {
     const item = welfareData[selectedBenefit || SENIOR_CARD_ID];
+    const contactLine = primaryContactLine(item);
     addCard({
       tag: '辦理方式', title: '確認後前往辦理',
       description: selectedBenefit === SENIOR_CARD_ID ? '建議先聯絡桃園市區公所，確認最新文件、受理時間與是否可跨區辦理。' : `建議先聯絡「${item.serviceUnit}」，確認最新資格與送件方式。`,
       bullets: item.steps,
-      meta: [`辦理單位：${item.serviceUnit}`, ...(item.contact ? [`聯絡方式：${item.contact}`] : []), `來源：${item.sourceName}`, `查核日：${item.verified}`],
-      actions: [{ label: '開啟官方說明 ↗', href: item.sourceUrl }, { label: '完成並查看申請摘要', action: 'summary', primary: true }, { label: '連結無法開啟？', action: `source-help:${selectedBenefit || SENIOR_CARD_ID}` }],
+      meta: [`辦理單位：${item.serviceUnit}`, ...(contactLine ? [`主責聯絡：${contactLine}`] : []), `來源：${item.sourceName}`, `查核日：${item.verified}`],
+      actions: [{ label: '精準找真人窗口', action: 'human', primary: true }, { label: '開啟官方說明 ↗', href: item.sourceUrl }, { label: '完成並查看申請摘要', action: 'summary' }, { label: '連結無法開啟？', action: `source-help:${selectedBenefit || SENIOR_CARD_ID}` }],
       progress: { current: 4, total: 4, label: '申請準備' }
     });
     setQuickActions([{ label: '查看申請摘要', action: 'summary' }, { label: '真人協助', action: 'human' }]);
@@ -752,6 +830,64 @@ function choose(action) {
   if (action === 'summary') { showApplicationSummary(); return; }
 
   if (action === 'human') {
+    if (!selectedBenefit) {
+      addCard({
+        tag: '選擇福利', title: '您想找哪一項福利的承辦人？',
+        description: '先選福利，系統才能判斷應找區公所、原民局、勞保局或長照專線。',
+        actions: [
+          ...Object.entries(welfareData).map(([id, item]) => ({ label: item.title, action: `human-benefit:${id}` })),
+          { label: '不確定是哪一項', action: 'human-fallback' }
+        ],
+        progress: { current: 1, total: 4, label: '精準真人轉介' }
+      });
+      return;
+    }
+    showHumanProblemStep();
+    return;
+  }
+  if (action === 'human-change-benefit') {
+    selectedBenefit = null;
+    addCard({
+      tag: '重新選擇福利', title: '請選擇要詢問的福利',
+      actions: Object.entries(welfareData).map(([id, item]) => ({ label: item.title, action: `human-benefit:${id}` })),
+      progress: { current: 1, total: 4, label: '精準真人轉介' }
+    });
+    return;
+  }
+  if (action.startsWith('human-benefit:')) {
+    selectedBenefit = dataId;
+    showHumanProblemStep();
+    return;
+  }
+  if (action === 'human-fallback') {
+    helpReason = '不確定福利項目，需要協助判斷';
+    showFallbackContact();
+    setQuickActions([{ label: '重新選擇福利', action: 'human-change-benefit' }, { label: '回主選單', action: 'menu' }]);
+    return;
+  }
+  if (action === 'human-change-region') {
+    const strategy = welfareData[selectedBenefit]?.referral?.strategy || '';
+    if (strategy.includes('district')) showRegionStep();
+    else showHumanResult();
+    return;
+  }
+  if (action.startsWith('help:')) {
+    helpReason = dataId;
+    const strategy = welfareData[selectedBenefit]?.referral?.strategy || '';
+    if (strategy.includes('district')) showRegionStep();
+    else showHumanResult();
+    return;
+  }
+  if (action.startsWith('region:')) {
+    if (dataId === 'unknown') {
+      showFallbackContact();
+      setQuickActions([{ label: '重新選擇行政區', action: 'human-change-region' }, { label: '回主選單', action: 'menu' }]);
+    } else showHumanResult(dataId);
+    return;
+  }
+
+  /* Legacy fallback retained for older saved browser history. */
+  if (action === 'human-legacy') {
     addCard({
       tag: '問題分類', title: '您遇到哪一種困難？',
       description: '系統先整理問題，再將您導向適合的真人服務窗口。',
@@ -761,12 +897,6 @@ function choose(action) {
     setQuickActions([{ label: '看不懂資格', action: 'help:看不懂資格' }, { label: '文件確認', action: 'help:文件確認' }]);
     return;
   }
-  if (action.startsWith('help:')) {
-    helpReason = dataId;
-    addCard({ tag: '服務區域', title: '您住在桃園哪個區域？', description: '這個選擇只用來導向服務區域，不會儲存詳細地址。', actions: [{ label: '桃園／八德／龜山', action: 'region:北桃園服務區' }, { label: '中壢／平鎮／楊梅', action: 'region:南桃園服務區' }, { label: '復興區', action: 'region:復興區' }, { label: '其他／不確定', action: 'region:戶籍地區公所' }], progress: { current: 2, total: 3, label: '真人協助' } });
-    return;
-  }
-  if (action.startsWith('region:')) { showHumanResult(dataId); return; }
 
   addBubble('請選擇下方其中一項。');
   setQuickActions(mainActions);

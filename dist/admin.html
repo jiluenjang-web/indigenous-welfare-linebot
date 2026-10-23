@@ -7,10 +7,10 @@
   <meta name="description" content="福利行動導航本機資料管理後台。">
   <title>福利資料管理｜福利行動導航</title>
   <link rel="icon" type="image/jpeg" href="./assets/資訊平權ICON.jpg">
-  <link rel="stylesheet" href="./admin.css?v=20261011a">
-  <script src="./welfare-data.js?v=20261004a" defer></script>
+  <link rel="stylesheet" href="./admin.css?v=20261024a">
+  <script src="./welfare-data.js?v=20261024a" defer></script>
   <script src="./welfare-reviews.js?v=20261011a" defer></script>
-  <script src="./admin.js?v=20261011a" defer></script>
+  <script src="./admin.js?v=20261024a" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -77,6 +77,21 @@
         <div class="review-list" id="review-list"></div>
       </section>
 
+      <section class="directory-panel" aria-labelledby="directory-title">
+        <div class="directory-head">
+          <div>
+            <span class="eyebrow">精準轉介</span>
+            <h2 id="directory-title">桃園 13 區服務窗口</h2>
+            <p>前台會依使用者選擇的行政區顯示電話與分機；修改後仍需按「儲存並更新前台」。</p>
+          </div>
+          <button class="button secondary" id="toggle-directory" type="button" aria-expanded="false">展開窗口資料</button>
+        </div>
+        <div id="regional-contact-editor" hidden>
+          <div class="regional-contact-list" id="regional-contact-list"></div>
+          <button class="button secondary" id="add-regional-contact" type="button">＋ 新增行政區窗口</button>
+        </div>
+      </section>
+
       <form id="benefit-form" autocomplete="off">
         <fieldset>
           <legend>基本資料</legend>
@@ -88,10 +103,31 @@
               <option value="mobility">交通外出</option><option value="emergency">急難救助</option><option value="housing">住宅</option>
             </select></label>
             <label>承辦單位<span class="required">必填</span><input name="serviceUnit" required></label>
-            <label>聯絡方式<input name="contact" placeholder="電話、分機或1966"></label>
             <label>資料整體查核日<input name="catalogCheckedAt" type="date"></label>
           </div>
           <label>摘要<span class="required">必填</span><textarea name="summary" rows="3" required></textarea></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>精準真人轉介</legend>
+          <p class="field-note">「區公所」會依使用者選擇的行政區套用上方 13 區窗口；「主責單位」適合 1966、勞保局或原民福利科等專責電話。</p>
+          <div class="form-grid two">
+            <label>轉介方式<span class="required">必填</span><select name="referralStrategy">
+              <option value="district">依行政區轉介區公所</option>
+              <option value="direct">直接轉介主責單位</option>
+              <option value="direct-and-district">同時提供區公所與主責單位</option>
+            </select></label>
+            <label>區公所承辦窗口<input name="referralDepartment" placeholder="例如：社會課／人文課"></label>
+          </div>
+          <label>轉介目的<span class="required">必填</span><textarea name="referralPurpose" rows="2" placeholder="例如：確認資格、文件、期限與送件窗口" required></textarea></label>
+          <h3 class="subheading">主責單位（直接轉介時必填）</h3>
+          <div class="form-grid three">
+            <label>單位名稱<input name="referralPrimaryUnit" placeholder="例如：原民福利科"></label>
+            <label>電話<input name="referralPrimaryPhone" inputmode="tel" placeholder="03-3322101 或 1966"></label>
+            <label>分機<input name="referralPrimaryExtension" inputmode="numeric" placeholder="例如：6686-6687"></label>
+          </div>
+          <label>主責單位用途<input name="referralPrimaryPurpose" placeholder="這支電話可處理什麼問題"></label>
+          <label>主責單位官方網址<span class="hint">如填寫須為 HTTPS</span><input name="referralPrimaryUrl" type="url" placeholder="https://..."></label>
         </fieldset>
 
         <fieldset>
