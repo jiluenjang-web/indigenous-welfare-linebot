@@ -61,6 +61,15 @@ body[data-font-size="xlarge"] .card-actions button,body[data-font-size="xlarge"]
     url("./assets/chat-background-ami.png");
   background-position:center center;
 }
+.messages[data-language="tay"]{
+  background-color:#e7eee9;
+  background-image:
+    linear-gradient(rgba(255,255,255,.68),rgba(255,255,255,.68)),
+    url("./assets/chat-background-tay.jpg");
+  background-position:center center,center 63%;
+  background-repeat:no-repeat;
+  background-size:cover;
+}
 
 /* Translucent bubbles keep the artwork visible without reducing readability. */
 .bubble{
