@@ -1,7 +1,7 @@
 // 此檔案由 tools/check-welfare-updates.mjs 自動產生，請勿直接編輯。
 window.WELFARE_REVIEW_QUEUE = {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-11-09T07:33:36.849Z",
+  "generatedAt": "2026-11-16T07:33:03.331Z",
   "pending": [
     {
       "id": "taoyuan-indigenous-senior-card-1793603088842",
@@ -25,8 +25,8 @@ window.WELFARE_REVIEW_QUEUE = {
   ],
   "history": [],
   "lastRun": {
-    "startedAt": "2026-11-09T07:33:20.259Z",
-    "finishedAt": "2026-11-09T07:33:36.849Z",
+    "startedAt": "2026-11-16T07:32:45.071Z",
+    "finishedAt": "2026-11-16T07:33:03.331Z",
     "checked": 7,
     "changed": 0,
     "initialized": 0,
