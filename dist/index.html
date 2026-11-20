@@ -2,15 +2,15 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#06c755">
   <meta name="description" content="原住民族長者福利行動導航 LINE Bot 互動介面示範。">
   <title>福利行動導航｜LINE Bot 介面模擬</title>
   <link rel="icon" type="image/jpeg" href="./assets/資訊平權ICON.jpg">
-  <link rel="stylesheet" href="./styles.css?v=20261024e">
+  <link rel="stylesheet" href="./styles.css?v=20261120a">
   <script src="./welfare-data.js?v=20261024a" defer></script>
   <script src="./translations.js?v=20260929b" defer></script>
-  <script src="./app.js?v=20261024a" defer></script>
+  <script src="./app.js?v=20261120a" defer></script>
 </head>
 <body>
   <main class="stage">
@@ -44,10 +44,12 @@
         <label for="font-size-select">字級</label>
         <select id="font-size-select" aria-label="調整字體大小">
           <option value="medium">中</option>
-          <option value="large">大</option>
+          <option value="large" selected>大</option>
           <option value="xlarge">特大</option>
+          <option value="xxlarge">超大</option>
         </select>
         <button class="read-button" id="read-button" type="button" aria-label="朗讀最新內容">🔊 朗讀</button>
+        <button class="help-button" id="help-button" type="button" aria-label="開啟使用教學">？教學</button>
         <span class="speech-note" id="speech-note">也可長按訊息</span>
       </div>
       <div class="demo-ribbon">介面模擬｜請勿輸入個人資料</div>
@@ -59,7 +61,7 @@
         <div class="date-pill">今天</div>
         <div class="message-row bot">
           <div class="bubble-avatar" aria-hidden="true"><img src="./assets/資訊平權ICON.jpg" alt=""></div>
-          <div class="bubble"><strong class="native-greeting" id="welcome-greeting" hidden></strong><strong class="native-question" id="welcome-help-question" hidden></strong><span id="welcome-body">您好，我是福利行動導航。<br><br>可以幫您查福利、整理申請文件，也能找到真人協助。</span><details class="chinese-reference" id="welcome-chinese-reference" hidden data-no-translate><summary>查看中文對照</summary><p>您好，我是福利行動導航。可以幫您查福利、整理申請文件，也能找到真人協助。</p></details></div>
+          <div class="bubble"><strong class="native-greeting" id="welcome-greeting" hidden></strong><strong class="native-question" id="welcome-help-question" hidden></strong><span id="welcome-body">您好，我是福利行動導航。<br><br>可以幫您查福利、整理申請文件，也能找到真人協助。</span><span class="start-prompt" data-no-translate>↓ 請按下方按鈕開始</span><details class="chinese-reference" id="welcome-chinese-reference" hidden data-no-translate><summary>查看中文對照</summary><p>您好，我是福利行動導航。可以幫您查福利、整理申請文件，也能找到真人協助。</p></details></div>
         </div>
       </div>
       <div class="chat-bottom">
@@ -78,6 +80,22 @@
       </div>
       <div class="phone-home" aria-hidden="true"></div>
       <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+      <section class="onboarding" id="onboarding" hidden>
+        <div class="onboarding-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-title" aria-describedby="onboarding-description">
+          <span class="onboarding-step">第一次使用</span>
+          <h2 id="onboarding-title">三步就能開始</h2>
+          <p id="onboarding-description">不用輸入資料，直接按按鈕即可。</p>
+          <ol>
+            <li><strong>1</strong><span>先在右上角選擇中文、阿美語或泰雅語。</span></li>
+            <li><strong>2</strong><span>字太小可在上方調成特大或超大，也可按「朗讀」。</span></li>
+            <li><strong>3</strong><span>按下方按鈕，選擇找福利、申請準備或真人協助。</span></li>
+          </ol>
+          <div class="onboarding-actions">
+            <button type="button" id="onboarding-later">稍後再看</button>
+            <button type="button" class="primary" id="onboarding-start">我知道了，開始使用</button>
+          </div>
+        </div>
+      </section>
     </section>
   </main>
 </body>

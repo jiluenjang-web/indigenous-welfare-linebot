@@ -11,8 +11,12 @@ const headerLanguage = document.querySelector('#header-language');
 const backButton = document.querySelector('#back-button');
 const fontSizeSelect = document.querySelector('#font-size-select');
 const readButton = document.querySelector('#read-button');
+const helpButton = document.querySelector('#help-button');
 let welcomeChineseReference = document.querySelector('#welcome-chinese-reference');
 const toast = document.querySelector('#toast');
+const onboarding = document.querySelector('#onboarding');
+const onboardingLater = document.querySelector('#onboarding-later');
+const onboardingStart = document.querySelector('#onboarding-start');
 
 const translationCatalog = window.FORMOSAN_TRANSLATIONS || {};
 const textSources = new WeakMap();
@@ -281,6 +285,132 @@ const mainActions = [
   { label: '真人協助', action: 'human' }
 ];
 
+const supportServices = {
+  legal: {
+    phone: '02-412-8518',
+    phoneHref: 'tel:024128518',
+    sourceUrl: 'https://www.laf.org.tw/service-legal-advice-tel',
+    indigenousUrl: 'https://www.laf.org.tw/service-project-detail/10',
+    checkedAt: '2026-11-20'
+  },
+  medical: {
+    taoyuanMapUrl: 'https://health.tycg.gov.tw/tyhpPublic/map/healthMap',
+    nhiSearchUrl: 'https://info.nhi.gov.tw/INAE1000/INAE1000S01',
+    mohwBookingUrl: 'https://sp1.hso.mohw.gov.tw/sso/hospital.htm',
+    taoyuanBookingUrl: 'https://regsrv.tycg.gov.tw/orga',
+    checkedAt: '2026-11-20'
+  }
+};
+
+function openOnboarding() {
+  onboarding.hidden = false;
+  window.requestAnimationFrame(() => onboardingStart.focus());
+}
+
+function closeOnboarding({ complete = false } = {}) {
+  onboarding.hidden = true;
+  try {
+    if (complete) localStorage.setItem('welfare-onboarding-complete', '1');
+    else sessionStorage.setItem('welfare-onboarding-later', '1');
+  } catch {}
+  helpButton.focus();
+}
+
+function showServiceTypeStep() {
+  addCard({
+    tag: '真人服務',
+    title: '您需要哪一種協助？',
+    description: '先選擇需求，系統再帶您前往正確的官方窗口。',
+    actions: [
+      { label: '福利承辦窗口', action: 'human-welfare', primary: true },
+      { label: '法律諮詢', action: 'legal' },
+      { label: '醫療掛號', action: 'medical' }
+    ],
+    progress: { current: 1, total: 3, label: '真人協助' },
+    preserveChinese: true
+  });
+  setQuickActions([{ label: '福利窗口', action: 'human-welfare' }, { label: '法律諮詢', action: 'legal' }, { label: '醫療掛號', action: 'medical' }]);
+}
+
+function showWelfareContactChoices() {
+  addCard({
+    tag: '選擇福利', title: '您想找哪一項福利的承辦人？',
+    description: '先選福利，系統才能判斷應找區公所、原民局、勞保局或長照專線。',
+    actions: [
+      ...Object.entries(welfareData).map(([id, item]) => ({ label: item.title, action: `human-benefit:${id}` })),
+      { label: '不確定是哪一項', action: 'human-fallback' }
+    ],
+    progress: { current: 2, total: 4, label: '精準真人轉介' }
+  });
+}
+
+function showLegalSupport() {
+  const service = supportServices.legal;
+  addCard({
+    tag: '法律諮詢',
+    title: '原住民法律問題可先找法律扶助基金會',
+    description: '可諮詢原住民、土地、繼承、家事、勞資或債務等法律問題。本系統只協助轉介，不代替律師判斷。',
+    bullets: [
+      '手機撥打 02-412-8518，依語音指示轉2洽電話法律諮詢',
+      '服務時間：週一至週五 09:00–12:30、13:30–17:00',
+      '諮詢前可先整理事件時間、相關文件及想詢問的問題'
+    ],
+    meta: ['官方來源：法律扶助基金會', `查核日：${service.checkedAt}`],
+    actions: [
+      { label: '撥打 02-412-8518', href: service.phoneHref, primary: true },
+      { label: '查看電話諮詢說明 ↗', href: service.sourceUrl },
+      { label: '查看原住民法律服務 ↗', href: service.indigenousUrl }
+    ],
+    progress: { current: 2, total: 3, label: '真人協助' },
+    preserveChinese: true
+  });
+  setQuickActions([{ label: '醫療掛號', action: 'medical' }, { label: '其他真人協助', action: 'human' }, { label: '回主選單', action: 'menu' }]);
+}
+
+function showMedicalSupport() {
+  addCard({
+    tag: '醫療掛號',
+    title: '您現在需要哪種幫助？',
+    description: '系統只導向官方醫療院所與掛號頁面，不會記錄身分證號、病歷或症狀。',
+    actions: [
+      { label: '已知道要去哪間醫院', action: 'medical-booking', primary: true },
+      { label: '先查附近醫療院所', action: 'medical-find' },
+      { label: '不確定該去哪裡', action: 'medical-unsure' }
+    ],
+    progress: { current: 2, total: 3, label: '掛號協助' },
+    preserveChinese: true
+  });
+  setQuickActions([{ label: '官方掛號入口', action: 'medical-booking' }, { label: '附近院所', action: 'medical-find' }]);
+}
+
+function showMedicalResult(mode) {
+  const service = supportServices.medical;
+  const isBooking = mode === 'booking';
+  addCard({
+    tag: isBooking ? '官方掛號入口' : '醫療院所查詢',
+    title: isBooking ? '開啟官方網路掛號頁面' : '先查詢附近有開診的醫療院所',
+    description: isBooking
+      ? '請在官方頁面選擇院所、科別與日期。個人資料只輸入在醫院或政府的官方掛號系統。'
+      : '可依地區、科別與開診時段查詢，選好院所後再開啟該院所的官方掛號頁。',
+    bullets: isBooking
+      ? ['確認網址為政府或醫院官方網站', '掛號完成後記下日期、時間、科別與掛號號碼']
+      : ['若有呼吸困難、意識不清或其他緊急狀況，請直接撥打 119', '不確定科別時，可先電話詢問院所掛號柜台'],
+    meta: ['官方來源：桃園市政府衛生局、衛生福利部、健保署', `查核日：${service.checkedAt}`],
+    actions: isBooking
+      ? [
+          { label: '桃園智慧健康掛號 ↗', href: service.taoyuanBookingUrl, primary: true },
+          { label: '衛福部所屬醫院掛號 ↗', href: service.mohwBookingUrl }
+        ]
+      : [
+          { label: '桃園市醫療院所查詢 ↗', href: service.taoyuanMapUrl, primary: true },
+          { label: '健保特約院所查詢 ↗', href: service.nhiSearchUrl }
+        ],
+    progress: { current: 3, total: 3, label: '掛號協助' },
+    preserveChinese: true
+  });
+  setQuickActions([{ label: isBooking ? '改查附近院所' : '開啟掛號入口', action: isBooking ? 'medical-find' : 'medical-booking' }, { label: '回主選單', action: 'menu' }]);
+}
+
 function scrollToLatest() { messages.scrollTop = messages.scrollHeight; }
 
 function addBubble(text, speaker = 'bot') {
@@ -299,12 +429,13 @@ function addBubble(text, speaker = 'bot') {
   scrollToLatest();
 }
 
-function addCard({ tag, title, description, bullets = [], meta = [], actions = [], progress = null, tone = '' }) {
+function addCard({ tag, title, description, bullets = [], meta = [], actions = [], progress = null, tone = '', preserveChinese = false }) {
   const row = document.createElement('div');
   row.className = 'message-row bot';
   const avatar = avatarElement();
   const bubble = document.createElement('div');
   bubble.className = `bubble card-message${tone ? ` ${tone}` : ''}`;
+  if (preserveChinese) bubble.dataset.noTranslate = '';
   if (tag) {
     const label = document.createElement('span');
     label.className = 'card-label';
@@ -362,7 +493,7 @@ function addCard({ tag, title, description, bullets = [], meta = [], actions = [
     bubble.append(controls);
   }
   const chineseText = [tag, title, description, ...bullets, ...meta].filter(Boolean).join('。');
-  addChineseReference(bubble, chineseText);
+  if (!preserveChinese) addChineseReference(bubble, chineseText);
   if (progress) setFlowProgress(bubble, progress.current, progress.total, progress.label);
   row.append(avatar, bubble);
   messages.append(row);
@@ -746,7 +877,9 @@ function choose(action) {
     'apply-location': '查看辦理方式', summary: '完成並查看申請摘要', 'qualify:resident': '是，設籍桃園', 'qualify:resident-no': '否／不確定',
     'qualify:age': '已年滿 55 歲', 'qualify:age-no': '未滿 55 歲／不確定',
     'qualify:indigenous': '戶籍記載為原住民', 'qualify:indigenous-no': '否／不確定',
-    'human-change-benefit': '改選福利', 'human-change-region': '改選行政區', 'human-fallback': '不確定是哪一項'
+    'human-change-benefit': '改選福利', 'human-change-region': '改選行政區', 'human-fallback': '不確定是哪一項',
+    'human-welfare': '福利承辦窗口', legal: '法律諮詢', medical: '醫療掛號',
+    'medical-booking': '開啟官方掛號入口', 'medical-find': '查附近醫療院所', 'medical-unsure': '不確定該去哪裡'
   };
   if (action === 'copy-summary') {
     copyApplicationSummary();
@@ -829,20 +962,21 @@ function choose(action) {
   }
   if (action === 'summary') { showApplicationSummary(); return; }
 
+  if (action === 'legal') { showLegalSupport(); return; }
+  if (action === 'medical') { showMedicalSupport(); return; }
+  if (action === 'medical-booking') { showMedicalResult('booking'); return; }
+  if (['medical-find', 'medical-unsure'].includes(action)) { showMedicalResult('find'); return; }
+
   if (action === 'human') {
     if (!selectedBenefit) {
-      addCard({
-        tag: '選擇福利', title: '您想找哪一項福利的承辦人？',
-        description: '先選福利，系統才能判斷應找區公所、原民局、勞保局或長照專線。',
-        actions: [
-          ...Object.entries(welfareData).map(([id, item]) => ({ label: item.title, action: `human-benefit:${id}` })),
-          { label: '不確定是哪一項', action: 'human-fallback' }
-        ],
-        progress: { current: 1, total: 4, label: '精準真人轉介' }
-      });
+      showServiceTypeStep();
       return;
     }
     showHumanProblemStep();
+    return;
+  }
+  if (action === 'human-welfare') {
+    showWelfareContactChoices();
     return;
   }
   if (action === 'human-change-benefit') {
@@ -904,7 +1038,13 @@ function choose(action) {
 
 function replyToText(text) {
   addBubble(text, 'user');
-  if (/福利|補助|津貼|交通|就醫/.test(text)) {
+  if (/法律|律師|訴訟|土地|繼承|債務/.test(text)) {
+    addBubble('我會帶您前往法律扶助基金會的官方諮詢窗口。');
+    setQuickActions([{ label: '開始法律諮詢導引', action: 'legal' }]);
+  } else if (/掛號|醫院|診所|看診|醫療院所/.test(text)) {
+    addBubble('我可以帶您查附近院所，或開啟官方掛號入口。');
+    setQuickActions([{ label: '開始醫療掛號導引', action: 'medical' }]);
+  } else if (/福利|補助|津貼|交通|就醫/.test(text)) {
     addBubble('我先用生活需求幫您分類，不用記政策名稱。');
     setQuickActions([{ label: '經濟生活', action: 'living' }, { label: '就醫照顧', action: 'care' }, { label: '交通外出', action: 'mobility' }]);
   } else if (/文件|準備|申請/.test(text)) {
@@ -944,6 +1084,12 @@ for (const id of ['reset-desktop', 'reset-mobile']) {
 languageSelect.addEventListener('change', () => applyLanguage(languageSelect.value));
 backButton.addEventListener('click', restorePreviousStep);
 readButton.addEventListener('click', toggleSpeech);
+helpButton.addEventListener('click', openOnboarding);
+onboardingLater.addEventListener('click', () => closeOnboarding());
+onboardingStart.addEventListener('click', () => closeOnboarding({ complete: true }));
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !onboarding.hidden) closeOnboarding();
+});
 
 fontSizeSelect.addEventListener('change', () => {
   document.body.dataset.fontSize = fontSizeSelect.value;
@@ -966,7 +1112,12 @@ document.addEventListener('pointerdown', event => {
 
 try {
   const savedFontSize = localStorage.getItem('welfare-font-size');
-  if (['medium', 'large', 'xlarge'].includes(savedFontSize)) fontSizeSelect.value = savedFontSize;
+  if (['medium', 'large', 'xlarge', 'xxlarge'].includes(savedFontSize)) fontSizeSelect.value = savedFontSize;
 } catch {}
 document.body.dataset.fontSize = fontSizeSelect.value;
 applyLanguage('zh');
+try {
+  if (!localStorage.getItem('welfare-onboarding-complete') && !sessionStorage.getItem('welfare-onboarding-later')) openOnboarding();
+} catch {
+  openOnboarding();
+}
